@@ -23,8 +23,9 @@ log("Starting")
  
 signal.signal(signal.SIGTERM, signal_handler)
  
-allowed_exts = ["jpg", "jpeg", "png", "tga", "gif", "bmp", "mp3", "flac", "aac", "wma", "ogg", "ogv", "mp4", "avi"]
- 
+# TODO The original script only allowed certain extensions - we should have a whilelist and a blacklist.
+excluded_exts = ["tmp"]
+
 wm = pyinotify.WatchManager()  # Watch Manager
 mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
  
@@ -89,7 +90,7 @@ class EventHandler(pyinotify.ProcessEvent):
         # Don't check the extension for directories
         if not is_dir:
             ext = os.path.splitext(filename)[1][1:].lower()
-            if ext not in allowed_exts:
+            if ext in excluded_exts:
                 return False
         if filename.find("@eaDir") > 0:
             return False

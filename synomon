@@ -82,8 +82,9 @@ class EventHandler(pyinotify.ProcessEvent):
             except KeyError:
                 # Don't care.
                 pass
-        else:
-            log("%s is not an allowed path" % event.pathname)
+        # TODO Reactivate this once we have different log levels
+        #else:
+        #    log("%s is not an allowed path" % event.pathname)
          
              
     def is_allowed_path(self, filename, is_dir):

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-automatically-indexing-new-files/
 
 import pyinotify

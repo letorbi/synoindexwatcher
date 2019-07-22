@@ -76,7 +76,7 @@ class EventHandler(pyinotify.ProcessEvent):
             # Remove from list of modified files.
             try:
                 self.modified_files.remove(event.pathname)
-            except KeyError, e:
+            except KeyError:
                 # Don't care.
                 pass
         else:
@@ -99,5 +99,5 @@ wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask,
  
 try:
     notifier.loop(daemonize=True, pid_file='/var/run/monitor.pid')
-except pyinotify.NotifierError, err:
-    print >> sys.stderr, err
+except pyinotify.NotifierError as err:
+    print(err, file=sys.stderr)

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-automatically-indexing-new-files/
 
 from __future__ import print_function

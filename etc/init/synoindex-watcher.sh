@@ -4,8 +4,7 @@
 
 case "$1" in
   start|"")
-    #start the monitoring daemon
-    synoindex-watcher
+    env python /opt/synoindex-watcher/synoindex-watcher.py
     ;;
   restart|reload|force-reload)
     echo "Error: argument '$1' not supported" >&2

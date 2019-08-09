@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 # https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-automatically-indexing-new-files/
+
+from __future__ import print_function
 
 import pyinotify
 import sys
 import os.path
 from subprocess import call
 import signal
- 
+
 log_file = open("/var/log/synoindex-watcher.log", "a")
      
 def log(text):
@@ -20,7 +22,7 @@ def signal_handler(signal, frame):
      
  
 log("Starting")
- 
+
 signal.signal(signal.SIGTERM, signal_handler)
  
 # TODO The original script only allowed certain extensions - we should have a whilelist and a blacklist.

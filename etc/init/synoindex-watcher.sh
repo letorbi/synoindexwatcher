@@ -4,7 +4,7 @@
 
 case "$1" in
   start|"")
-    env python /opt/synoindex-watcher/synoindex-watcher.py
+    env LC_ALL=en_US.utf8 python /opt/synoindex-watcher/synoindex-watcher.py
     ;;
   restart|reload|force-reload)
     echo "Error: argument '$1' not supported" >&2

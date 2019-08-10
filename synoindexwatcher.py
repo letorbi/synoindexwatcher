@@ -14,21 +14,8 @@ def log(text):
     log_file.write(text + "\n")
     log_file.flush()
      
-def signal_handler(signal, frame):
-    log("Exiting")
-    sys.exit(0)
-     
- 
-log("Starting")
-
-signal.signal(signal.SIGTERM, signal_handler)
- 
 # TODO The original script only allowed certain extensions - we should have a whilelist and a blacklist.
 excluded_exts = ["tmp"]
-
-wm = pyinotify.WatchManager()  # Watch Manager
-mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
- 
  
 class EventHandler(pyinotify.ProcessEvent):
     def __init__(self):
@@ -96,12 +83,23 @@ class EventHandler(pyinotify.ProcessEvent):
         if filename.find("@eaDir") > 0:
             return False
         return True
+
+
+def signal_handler(signal, frame):
+    log("Exiting")
+    sys.exit(0)
+
+log("Starting")
+
+signal.signal(signal.SIGTERM, signal_handler)
  
+mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
 handler = EventHandler()
+wm = pyinotify.WatchManager()  # Watch Manager
 notifier = pyinotify.Notifier(wm, handler)
 wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask, rec=True, auto_add=True)
  
 try:
-    notifier.loop(daemonize=True, pid_file='/var/run/synoindexwatcher.pid')
+    notifier.loop(daemonize=False, pid_file='/var/run/synoindexwatcher.pid')
 except pyinotify.NotifierError as err:
     print(err, file=sys.stderr)

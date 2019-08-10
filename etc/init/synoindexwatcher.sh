@@ -4,17 +4,17 @@
 
 case "$1" in
   start|"")
-    env LC_ALL=en_US.utf8 python /opt/synoindex-watcher/synoindex-watcher.py
+    env LC_ALL=en_US.utf8 python /opt/synoindexwatcher/synoindexwatcher.py
     ;;
   restart|reload|force-reload)
     echo "Error: argument '$1' not supported" >&2
     exit 3
     ;;
   stop)
-    kill `cat /var/run/synoindex-watcher.pid`
+    kill `cat /var/run/synoindexwatcher.pid`
     ;;
   *)
-    echo "Usage: synoindex-watcher.sh [start|stop]" >&2
+    echo "Usage: synoindexwatcher.sh [start|stop]" >&2
     exit 3
     ;;
 esac

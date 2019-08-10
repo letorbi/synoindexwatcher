@@ -8,7 +8,7 @@ import os.path
 from subprocess import call
 import signal
 
-log_file = open("/var/log/synoindex-watcher.log", "a")
+log_file = open("/var/log/synoindexwatcher.log", "a")
      
 def log(text):
     log_file.write(text + "\n")
@@ -102,6 +102,6 @@ notifier = pyinotify.Notifier(wm, handler)
 wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask, rec=True, auto_add=True)
  
 try:
-    notifier.loop(daemonize=True, pid_file='/var/run/synoindex-watcher.pid')
+    notifier.loop(daemonize=True, pid_file='/var/run/synoindexwatcher.pid')
 except pyinotify.NotifierError as err:
     print(err, file=sys.stderr)

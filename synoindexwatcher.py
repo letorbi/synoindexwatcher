@@ -98,8 +98,5 @@ handler = EventHandler()
 wm = pyinotify.WatchManager()  # Watch Manager
 notifier = pyinotify.Notifier(wm, handler)
 wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask, rec=True, auto_add=True)
- 
-try:
-    notifier.loop(daemonize=False, pid_file='/var/run/synoindexwatcher.pid')
-except pyinotify.NotifierError as err:
-    print(err, file=sys.stderr)
+
+notifier.loop(daemonize=True, pid_file='/var/run/synoindexwatcher.pid')

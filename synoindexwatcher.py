@@ -2,11 +2,13 @@
 
 from __future__ import print_function
 
-import pyinotify
 import sys
 import os.path
 from subprocess import call
 import signal
+
+import argparse
+import pyinotify
 
 log_file = open("/var/log/synoindexwatcher.log", "a")
      
@@ -92,11 +94,18 @@ def signal_handler(signal, frame):
 log("Starting")
 
 signal.signal(signal.SIGTERM, signal_handler)
- 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--daemon', action="store_const", const=True, default=False,
+    help='run watcher as a daemon')
+parser.add_argument('--pidfile', default="/var/run/synoindexwatcher.pid",
+    help='set pid-file, if watcher runs as a daemon')
+args = parser.parse_args()
+
 mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
 handler = EventHandler()
 wm = pyinotify.WatchManager()  # Watch Manager
 notifier = pyinotify.Notifier(wm, handler)
 wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask, rec=True, auto_add=True)
 
-notifier.loop(daemonize=True, pid_file='/var/run/synoindexwatcher.pid')
+notifier.loop(daemonize=args.daemon, pid_file=args.pidfile)

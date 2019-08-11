@@ -87,25 +87,27 @@ class EventHandler(pyinotify.ProcessEvent):
         return True
 
 
-def signal_handler(signal, frame):
+def start():
+    log("Starting")
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--daemon', action="store_const", const=True, default=False,
+        help='run watcher as a daemon')
+    parser.add_argument('--pidfile', default="/var/run/synoindexwatcher.pid",
+        help='set pid-file, if watcher runs as a daemon')
+    args = parser.parse_args()
+
+    mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
+    handler = EventHandler()
+    wm = pyinotify.WatchManager()  # Watch Manager
+    notifier = pyinotify.Notifier(wm, handler)
+    wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask, rec=True, auto_add=True)
+
+    notifier.loop(daemonize=args.daemon, pid_file=args.pidfile)
+
+def stop(signal, frame):
     log("Exiting")
     sys.exit(0)
 
-log("Starting")
-
-signal.signal(signal.SIGTERM, signal_handler)
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--daemon', action="store_const", const=True, default=False,
-    help='run watcher as a daemon')
-parser.add_argument('--pidfile', default="/var/run/synoindexwatcher.pid",
-    help='set pid-file, if watcher runs as a daemon')
-args = parser.parse_args()
-
-mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
-handler = EventHandler()
-wm = pyinotify.WatchManager()  # Watch Manager
-notifier = pyinotify.Notifier(wm, handler)
-wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"], mask, rec=True, auto_add=True)
-
-notifier.loop(daemonize=args.daemon, pid_file=args.pidfile)
+signal.signal(signal.SIGTERM, stop)
+start()

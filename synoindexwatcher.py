@@ -93,7 +93,7 @@ def start():
         help='set the pid-file, if watcher runs as a daemon (default: /var/run/synoindexwatcher.pid)')
     args = parser.parse_args()
 
-    logging.basicConfig(filename=None,level=getattr(logging, args.loglevel.upper()), format='%(asctime)s %(levelname)s %(message)s')
+    logging.basicConfig(filename=args.logfile,level=getattr(logging, args.loglevel.upper()), format='%(asctime)s %(levelname)s %(message)s')
     logging.info("Starting")
 
     signal.signal(signal.SIGTERM, sigterm)

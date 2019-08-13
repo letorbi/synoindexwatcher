@@ -8,14 +8,9 @@ from subprocess import call
 import signal
 
 import argparse
+import logging
 import pyinotify
 
-log_file = open("/var/log/synoindexwatcher.log", "a")
-     
-def log(text):
-    log_file.write(text + "\n")
-    log_file.flush()
-     
 # TODO The original script only allowed certain extensions - we should have a whilelist and a blacklist.
 excluded_exts = ["tmp"]
  
@@ -62,18 +57,17 @@ class EventHandler(pyinotify.ProcessEvent):
          
     def do_index_command(self, event, index_argument):
         if self.is_allowed_path(event.pathname, event.dir):
-            log("synoindex %s %s" % (index_argument, event.pathname))
+            logging.info("synoindex %s %s" % (index_argument, event.pathname))
             call(["synoindex", index_argument, event.pathname])
              
             # Remove from list of modified files.
             try:
                 self.modified_files.remove(event.pathname)
             except KeyError:
-                # Don't care.
+                logging.debug("Modified file has already been removed from list")
                 pass
-        # TODO Reactivate this once we have different log levels
-        #else:
-        #    log("%s is not an allowed path" % event.pathname)
+        else:
+            logging.warning("%s is not an allowed path" % event.pathname)
          
              
     def is_allowed_path(self, filename, is_dir):
@@ -88,14 +82,21 @@ class EventHandler(pyinotify.ProcessEvent):
 
 
 def start():
-    log("Starting")
-
     parser = argparse.ArgumentParser()
     parser.add_argument('--daemon', action="store_const", const=True, default=False,
         help='run watcher as a daemon')
+    parser.add_argument('--logfile', default=None, # /var/log/synoindexwatcher.log",
+        help='set the log-file for program messages (default: none)')
+    parser.add_argument('--loglevel', default="WARNING",
+        help='set the minimum level that shall be logged (default: WARNING)')
     parser.add_argument('--pidfile', default="/var/run/synoindexwatcher.pid",
-        help='set pid-file, if watcher runs as a daemon')
+        help='set the pid-file, if watcher runs as a daemon (default: /var/run/synoindexwatcher.pid)')
     args = parser.parse_args()
+
+    logging.basicConfig(filename=None,level=getattr(logging, args.loglevel.upper()), format='%(asctime)s %(levelname)s %(message)s')
+    logging.info("Starting")
+
+    signal.signal(signal.SIGTERM, sigterm)
 
     mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM  # watched events
     handler = EventHandler()
@@ -105,9 +106,8 @@ def start():
 
     notifier.loop(daemonize=args.daemon, pid_file=args.pidfile)
 
-def stop(signal, frame):
-    log("Exiting")
+def sigterm(signal, frame):
+    logging.info("Process received SIGTERM signal")
     sys.exit(0)
 
-signal.signal(signal.SIGTERM, stop)
 start()

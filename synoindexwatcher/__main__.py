@@ -126,4 +126,5 @@ def sigterm(signal, frame):
     logging.info("Process received SIGTERM signal")
     sys.exit(0)
 
-start()
+if __name__ == "__main__":
+    start()

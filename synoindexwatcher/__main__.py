@@ -102,8 +102,8 @@ def start():
         default=False, help="run watcher as a daemon")
     parser.add_argument("--logfile", default=None,
         help="set the log-file for program messages (default: none)")
-    parser.add_argument("--loglevel", default="WARNING",
-        help="set the minimum level that shall be logged (default: WARNING)")
+    parser.add_argument("--loglevel", default="INFO",
+        help="set the minimum level that shall be logged (default: INFO)")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
         help="set the pid-file, if watcher runs as a daemon (default: /var/run/synoindexwatcher.pid)")
     args = parser.parse_args()

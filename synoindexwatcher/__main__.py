@@ -110,7 +110,6 @@ def start():
 
     logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
         format="%(asctime)s %(levelname)s %(message)s")
-    logging.info("Starting")
 
     signal.signal(signal.SIGTERM, sigterm)
 
@@ -120,6 +119,7 @@ def start():
     notifier = pyinotify.Notifier(wm, handler)
     wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"],
         mask, rec=True, auto_add=True)
+    logging.info("Watching for media file changes...")
     notifier.loop(daemonize=args.daemon, pid_file=args.pidfile)
 
 def sigterm(signal, frame):

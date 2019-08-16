@@ -10,21 +10,63 @@ blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-aut
 
 ## Features
 
-* Python 2 and Python 3 compatible (minimum version is 2.4)
 * Uses inotify to watch for changes
+* Python 2 and Python 3 compatible (minimum version is 2.4)
 
 ## Installation
 
-```
-# pip install https://github.com/letorbi/pyinotify
-# git clone https://github.com/letorbi/synoindexwatcher /opt
-```
-
-If you want to start the daemon automatically during boot:
+I recommend to use pip for the installation. Synology DiskStations do not have pip installed by default, but you can add
+it easily with the following command:
 
 ```
-ln -s /opt/synoindexwatcher/etc/init/synoindexwatcher.sh /usr/local/etc/rc.d/S99synoindexwatcher.sh
+# wget https://bootstrap.pypa.io/get-pip.py
+# python get-pip.py
 ```
+
+Synoindex Watcher relies on pyinotify, but unfortunately the current version of it requires a small fix to work with
+Synology's default Python installation. Therefore you have to install my forked version instead:
+
+```
+# python -m pip install https://github.com/letorbi/pyinotify/archive/master.zip
+```
+
+Now we can finally install Synoindex Watcher:
+
+```
+# python -m pip install https://github.com/letorbi/synoindexwatcher/archive/master.zip
+```
+
+## Usage
+
+You can start Synoindex Watcher with the following command:
+
+```
+$ python -m synoindexwatcher
+```
+
+Add `-h` or `--help` to see the list of available parameters:
+
+```
+$ python -m synoindexwatcher --help
+```
+
+### Init script
+
+The repository also contains an init-script that can be used to start and stop Synoindex Watcher as a daemon. Assuming
+you are in the repository root, you can use it to start and stop the daemon:
+
+```
+# ./etc/init/synoindexwatcher.sh start
+# ./etc/init/synoindexwatcher.sh stop
+```
+
+Just create a link to the init-script, if you want to start the daemon automatically when your Synology DiskStation
+boots:
+
+```
+# ln -s ./etc/init/synoindexwatcher.sh /usr/local/etc/rc.d/S99synoindexwatcher.sh
+```
+
 
 ----
 

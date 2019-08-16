@@ -23,7 +23,7 @@ case "$1" in
     mkdir -p /var/run/synoindexwatcher
     # Set LC_ALL to ensure that the filesystem encoding is correctly detected
     # during boot.
-    env LC_ALL=en_US.utf8 python /opt/synoindexwatcher/synoindexwatcher.py \
+    env LC_ALL=en_US.utf8 python -m synoindexwatcher \
       --daemon \
       --logfile /var/log/synoindexwatcher.log \
       --loglevel INFO \

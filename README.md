@@ -53,18 +53,18 @@ $ python -m synoindexwatcher --help
 ### Init script
 
 The repository also contains an init-script that can be used to start and stop Synoindex Watcher as a daemon. Assuming
-you are in the repository root, you can use it to start and stop the daemon:
+you've cloned the repository into */opt/synoindexwatcher*, you can use it to start and stop the daemon:
 
 ```
-# ./etc/init/synoindexwatcher.sh start
-# ./etc/init/synoindexwatcher.sh stop
+# /opt/synoindexwatcher/etc/init/synoindexwatcher.sh start
+# /opt/synoindexwatcher/etc/init/synoindexwatcher.sh stop
 ```
 
 Just create a link to the init-script, if you want to start the daemon automatically when your Synology DiskStation
 boots:
 
 ```
-# ln -s ./etc/init/synoindexwatcher.sh /usr/local/etc/rc.d/S99synoindexwatcher.sh
+# ln -s /opt/synoindexwatcher/etc/init/synoindexwatcher.sh /usr/local/etc/rc.d/S99synoindexwatcher.sh
 ```
 
 

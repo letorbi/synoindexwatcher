@@ -110,7 +110,7 @@ def start():
 
     logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
         format="%(asctime)s %(levelname)s %(message)s")
-
+    
     signal.signal(signal.SIGTERM, sigterm)
 
     mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM
@@ -127,4 +127,8 @@ def sigterm(signal, frame):
     sys.exit(0)
 
 if __name__ == "__main__":
-    start()
+    try:
+        start()
+    except Exception:
+        logging.exception("An uncaught exception occurred")
+        sys.exit(255)

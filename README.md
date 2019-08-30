@@ -24,7 +24,7 @@ it easily with the following command:
 # python get-pip.py
 ```
 
-Synoindex Watcher relies on pyinotify, but unfortunately the current version of it requires a small fix to work with
+Synoindex Watcher relies on pyinotify, but unfortunately the current version of it requires [a small fix](https://github.com/letorbi/pyinotify/commit/19c0e05532784e9b736b3ab960dc256b8d69ba6c) to work with
 Synology's default Python installation. Therefore you have to install my forked version instead:
 
 ```

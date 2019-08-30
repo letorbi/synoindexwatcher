@@ -10,8 +10,9 @@ blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-aut
 
 ## Features
 
-* Uses inotify to watch for changes
-* Python 2 and Python 3 compatible (minimum version is 2.4)
+* **Lightweight** No need to install extra Synology packages
+* **Intelligent** Uses inotify to watch for changes
+* **Agnostic** Python 2 and Python 3 compatible (minimum version is 2.4)
 
 ## Installation
 

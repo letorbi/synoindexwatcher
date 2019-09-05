@@ -43,14 +43,8 @@ def process_delete(filepath, is_dir):
         arg = "-d"
     do_index_command(filepath, is_dir, arg)
 
-def process_IN_MODIFY(filepath, is_dir):
-    if is_allowed_path(filepath, is_dir):
-        modified_files.add(filepath)
-
-def process_IN_CLOSE_WRITE(filepath, is_dir):
-    # ignore close_write unlesss the file has previously been modified.
-    if (filepath in modified_files):
-        do_index_command(filepath, is_dir, "-a")
+def process_modify(filepath, is_dir):
+    do_index_command(filepath, is_dir, "-a")
      
 def do_index_command(filepath, is_dir, index_argument):
     if is_allowed_path(filepath, is_dir):
@@ -65,7 +59,6 @@ def do_index_command(filepath, is_dir, index_argument):
     else:
         logging.warning("%s is not an allowed path" % filepath)
      
-         
 def is_allowed_path(filepath, is_dir):
     # Don't check the extension for directories
     if not is_dir:
@@ -120,7 +113,7 @@ def start():
     signal.signal(signal.SIGTERM, sigterm)
     
     inotify = INotify()
-    mask = flags.CLOSE_WRITE | flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MOVE_SELF | flags.MODIFY
+    mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MOVE_SELF | flags.MODIFY
     add_watch_recursive(inotify, b"/volume1", b"music", mask)
     add_watch_recursive(inotify, b"/volume1", b"photo", mask)
     add_watch_recursive(inotify, b"/volume1", b"video", mask)
@@ -147,9 +140,7 @@ def start():
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
                   process_delete(path, is_dir)
                 elif event.mask & flags.MODIFY:
-                  process_IN_MODIFY(path, is_dir)
-                elif event.mask & flags.CLOSE_WRITE:
-                  process_IN_CLOSE_WRITE(path, is_dir)
+                  process_modify(path, is_dir)
                 elif event.mask & flags.MOVE_SELF:
                   watch_info[event.wd]["name"] = last_moved_to
                   logging.debug("Updated info for watch %d: %s" % (event.wd, watch_info[event.wd]))
@@ -168,7 +159,6 @@ def sigterm(signal, frame):
 # TODO The original script only allowed certain extensions.
 #      Maybe we should have a whilelist and a blacklist.
 excluded_exts = ["tmp"]
-modified_files = set()
 watch_info = {}
 
 if __name__ == "__main__":

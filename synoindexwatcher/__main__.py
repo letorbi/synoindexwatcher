@@ -72,13 +72,15 @@ def add_watch_recursive(inotify, root, name, mask, parent = -1):
         "parent": parent
       }
       logging.debug("Added info for watch %d: %s" % (wd, watch_info[wd]))
-      with os.scandir(path) as it:
-          for entry in it:
-              if entry.is_dir():
-                  add_watch_recursive(inotify, path, entry.name, mask, wd)
-  except FileNotFoundError:
-      logging.debug("Watch-path cannot be found anymore: %s" % path)
-      pass
+      for entry in os.listdir(path):
+          if os.path.isdir(os.path.join(path, entry)):
+              add_watch_recursive(inotify, path, entry, mask, wd)
+  except OSError as e:
+    if e.errno == 2:
+        logging.debug("Watch-path cannot be found anymore: %s" % path)
+        pass
+    else:
+        raise
 
 def get_watch_path(wd):
   path = watch_info[wd]["name"]

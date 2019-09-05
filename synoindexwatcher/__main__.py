@@ -118,9 +118,6 @@ def start():
         last_moved_to = None
         while True:
             for event in inotify.read():
-                #print(event)
-                #for flag in flags.from_mask(event.mask):
-                #    print('    ' + str(flag))
                 is_dir = event.mask & flags.ISDIR
                 root = get_watch_path(event.wd)
                 name = str.encode(event.name)

@@ -76,10 +76,27 @@ def is_allowed_path(filepath, is_dir):
         return False
     return True
  
-def add_watch_recursive(inotify, path, mask):
-  for root, dirs, files in os.walk(path):
-    wd = inotify.add_watch(root, mask)
-    watch_roots[wd] = root
+def add_watch_recursive(inotify, root, name, mask, parent = -1):
+  path = os.path.join(root, name)
+  wd = inotify.add_watch(path, mask)
+  watch_info[wd] = {
+      "name":  path if parent == -1 else name,
+    "parent": parent
+  }
+  logging.debug("Added info for watch %d: %s" % (wd, watch_info[wd]))
+  with os.scandir(path) as it:
+      for entry in it:
+          if entry.is_dir():
+              add_watch_recursive(inotify, path, entry.name, mask, wd)
+
+def get_watch_path(wd):
+  path = watch_info[wd]["name"]
+  parent = watch_info[wd]["parent"]
+  while parent != -1:
+    wd = parent
+    path = os.path.join(watch_info[wd]["name"], path)
+    parent = watch_info[wd]["parent"]
+  return path
 
 def start():
     parser = argparse.ArgumentParser()
@@ -99,26 +116,42 @@ def start():
     signal.signal(signal.SIGTERM, sigterm)
     
     inotify = INotify()
-    mask = flags.CLOSE_WRITE | flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
-    add_watch_recursive(inotify, b"/volume1/music", mask)
-    add_watch_recursive(inotify, b"/volume1/photo", mask)
-    add_watch_recursive(inotify, b"/volume1/video", mask)
+    mask = flags.CLOSE_WRITE | flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MOVE_SELF | flags.MODIFY
+    add_watch_recursive(inotify, b"/volume1", b"music", mask)
+    add_watch_recursive(inotify, b"/volume1", b"photo", mask)
+    add_watch_recursive(inotify, b"/volume1", b"video", mask)
 
     logging.info("Watching for media file changes...")
 
     try:
+        last_moved_to = None
         while True:
             for event in inotify.read():
+                #print(event)
+                #for flag in flags.from_mask(event.mask):
+                #    print('    ' + str(flag))
                 is_dir = event.mask & flags.ISDIR
-                filepath = os.path.join(watch_roots[event.wd], str.encode(event.name))
+                root = get_watch_path(event.wd)
+                name = str.encode(event.name)
+                path = os.path.join(root, name)
                 if event.mask & flags.CREATE or event.mask & flags.MOVED_TO:
-                  process_create(filepath, is_dir)
+                  if is_dir and event.mask & flags.CREATE:
+                    add_watch_recursive(inotify, root, name, mask, event.wd)
+                  if is_dir and event.mask & flags.MOVED_TO:
+                    last_moved_to = name
+                  process_create(path, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
-                  process_delete(filepath, is_dir)
+                  process_delete(path, is_dir)
                 elif event.mask & flags.MODIFY:
-                  process_IN_MODIFY(filepath, is_dir)
+                  process_IN_MODIFY(path, is_dir)
                 elif event.mask & flags.CLOSE_WRITE:
-                  process_IN_CLOSE_WRITE(filepath, is_dir)
+                  process_IN_CLOSE_WRITE(path, is_dir)
+                elif event.mask & flags.MOVE_SELF:
+                  watch_info[event.wd]["name"] = last_moved_to
+                  logging.debug("Updated info for watch %d: %s" % (event.wd, watch_info[event.wd]))
+                elif event.mask & flags.IGNORED:
+                  logging.debug("Removing info for watch %d: %s" % (event.wd, watch_info[event.wd]))
+                  del watch_info[event.wd]
             # Just wait one second until we query inotify again
             time.sleep(1)
     except KeyboardInterrupt:
@@ -132,7 +165,7 @@ def sigterm(signal, frame):
 #      Maybe we should have a whilelist and a blacklist.
 excluded_exts = ["tmp"]
 modified_files = set()
-watch_roots = {}
+watch_info = {}
 
 if __name__ == "__main__":
     try:

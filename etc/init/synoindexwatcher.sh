@@ -23,11 +23,10 @@ case "$1" in
     mkdir -p /var/run/synoindexwatcher
     # Set LC_ALL to ensure that the filesystem encoding is correctly detected
     # during boot.
-    env LC_ALL=en_US.utf8 python -m synoindexwatcher \
-      --daemon \
+    nohup env LC_ALL=en_US.utf8 python -m synoindexwatcher \
       --logfile /var/log/synoindexwatcher.log \
-      --loglevel INFO \
-      --pidfile /var/run/synoindexwatcher/init.pid
+      --loglevel INFO > /dev/null 2>&1 &
+    echo $! > /var/run/synoindexwatcher/init.pid
     ;;
   restart|reload|force-reload)
     echo "Error: argument '$1' not supported" >&2

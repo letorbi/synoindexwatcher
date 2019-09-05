@@ -50,12 +50,6 @@ def do_index_command(filepath, is_dir, index_argument):
     if is_allowed_path(filepath, is_dir):
         logging.info("synoindex %s %s" % (index_argument, filepath))
         subprocess.call(["synoindex", index_argument, filepath])
-        # Remove from list of modified files.
-        try:
-            modified_files.remove(filepath)
-        except KeyError:
-            logging.debug("Modified file has already been removed from list")
-            pass
     else:
         logging.warning("%s is not an allowed path" % filepath)
      

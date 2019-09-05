@@ -77,17 +77,21 @@ def is_allowed_path(filepath, is_dir):
     return True
  
 def add_watch_recursive(inotify, root, name, mask, parent = -1):
-  path = os.path.join(root, name)
-  wd = inotify.add_watch(path, mask)
-  watch_info[wd] = {
-      "name":  path if parent == -1 else name,
-    "parent": parent
-  }
-  logging.debug("Added info for watch %d: %s" % (wd, watch_info[wd]))
-  with os.scandir(path) as it:
-      for entry in it:
-          if entry.is_dir():
-              add_watch_recursive(inotify, path, entry.name, mask, wd)
+  try:
+      path = os.path.join(root, name)
+      wd = inotify.add_watch(path, mask)
+      watch_info[wd] = {
+          "name":  path if parent == -1 else name,
+        "parent": parent
+      }
+      logging.debug("Added info for watch %d: %s" % (wd, watch_info[wd]))
+      with os.scandir(path) as it:
+          for entry in it:
+              if entry.is_dir():
+                  add_watch_recursive(inotify, path, entry.name, mask, wd)
+  except FileNotFoundError:
+      logging.debug("Watch-path cannot be found anymore: %s" % path)
+      pass
 
 def get_watch_path(wd):
   path = watch_info[wd]["name"]

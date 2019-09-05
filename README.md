@@ -11,7 +11,7 @@ blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-aut
 
 * **Lightweight** No need to install extra Synology packages
 * **Intelligent** Executes only if a file has actually been added/deleted/renamed
-* **Agnostic** Python 2 and Python 3 compatible (minimum version is 2.4)
+* **Agnostic** Python 2 and Python 3 compatible (minimum tested version is 2.7)
 
 ## Installation
 
@@ -23,18 +23,14 @@ it easily with the following command:
 # python get-pip.py
 ```
 
-Synoindex Watcher relies on pyinotify, but unfortunately the current version of it requires [a small fix](https://github.com/letorbi/pyinotify/commit/19c0e05532784e9b736b3ab960dc256b8d69ba6c) to work with
-Synology's default Python installation. Therefore you have to install my forked version instead:
-
-```
-# python -m pip install https://github.com/letorbi/pyinotify/archive/master.zip
-```
-
-Now we can finally install Synoindex Watcher:
+Now you can enter the install command:
 
 ```
 # python -m pip install https://github.com/letorbi/synoindexwatcher/archive/master.zip
 ```
+
+This will install Synoindex Watcher along with its dependencies
+[inotify-simple](https://pypi.org/project/inotify_simple/) and [enum](https://pypi.org/project/enum/).
 
 ## Usage
 

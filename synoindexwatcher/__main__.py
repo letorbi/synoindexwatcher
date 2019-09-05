@@ -73,7 +73,8 @@ def add_watch_recursive(inotify, root, name, mask, parent = -1):
       }
       logging.debug("Added info for watch %d: %s" % (wd, watch_info[wd]))
       for entry in os.listdir(path):
-          if os.path.isdir(os.path.join(path, entry)):
+          entrypath = os.path.join(path, entry)
+          if os.path.isdir(entrypath) and is_allowed_path(entrypath, True):
               add_watch_recursive(inotify, path, entry, mask, wd)
   except OSError as e:
     if e.errno == 2:

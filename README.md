@@ -19,18 +19,17 @@ I recommend to use pip for the installation. Synology DiskStations do not have p
 it easily with the following command:
 
 ```
-# wget https://bootstrap.pypa.io/get-pip.py
-# python get-pip.py
+sudo python -m ensurepip
 ```
 
-Now you can enter the install command:
+Now you can install the synoindexwatcher module:
 
 ```
-# python -m pip install https://github.com/letorbi/synoindexwatcher/archive/master.zip
+$ sudo python -m pip install https://github.com/letorbi/synoindexwatcher/archive/master.zip
 ```
 
-This will install Synoindex Watcher along with its dependencies
-[inotify-simple](https://pypi.org/project/inotify_simple/) and [enum](https://pypi.org/project/enum/).
+This will also install its dependencies [inotify-simple](https://pypi.org/project/inotify_simple/) and
+[enum](https://pypi.org/project/enum/).
 
 ## Usage
 

@@ -97,8 +97,6 @@ def get_watch_path(wd):
 
 def start():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--daemon", action="store_const", const=True,
-        default=False, help="run watcher as a daemon")
     parser.add_argument("--logfile", default=None,
         help="set the log-file for program messages (default: none)")
     parser.add_argument("--loglevel", default="INFO",

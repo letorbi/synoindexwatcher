@@ -10,7 +10,7 @@ blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-aut
 ## Features
 
 * **Lightweight** No need to install extra Synology packages
-* **Intelligent** Uses inotify to watch for changes
+* **Intelligent** Executes only if a file has actually been added/deleted/renamed
 * **Agnostic** Python 2 and Python 3 compatible (minimum version is 2.4)
 
 ## Installation

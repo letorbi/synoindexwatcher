@@ -18,83 +18,68 @@
 ################################################################################
 
 import sys
-import os.path
+import os
 import subprocess
 import signal
-
 import argparse
 import logging
-import pyinotify
+import time
 
-# TODO The original script only allowed certain extensions.
-#      Maybe we should have a whilelist and a blacklist.
-excluded_exts = ["tmp"]
- 
-class EventHandler(pyinotify.ProcessEvent):
-    def __init__(self):
-        self.modified_files = set()
-         
-    def process_IN_CREATE(self, event):
-        self.process_create(event)
+from inotify_simple import INotify, flags
+
+def process_create(filepath, is_dir):
+    arg = ""
+    if is_dir:
+        arg = "-A"
+    else:
+        arg = "-a"
+    do_index_command(filepath, is_dir, arg)
+
+def process_delete(filepath, is_dir):
+    arg = ""
+    if is_dir:
+        arg = "-D"
+    else:
+        arg = "-d"
+    do_index_command(filepath, is_dir, arg)
+
+def process_IN_MODIFY(filepath, is_dir):
+    if is_allowed_path(filepath, is_dir):
+        modified_files.add(filepath)
+
+def process_IN_CLOSE_WRITE(filepath, is_dir):
+    # ignore close_write unlesss the file has previously been modified.
+    if (filepath in modified_files):
+        do_index_command(filepath, is_dir, "-a")
      
-    def process_IN_MOVED_TO(self, event):
-        self.process_create(event)
-         
-    def process_IN_MOVED_FROM(self, event):
-        self.process_delete(event)
-         
-    def process_IN_DELETE(self, event):
-        self.process_delete(event)
+def do_index_command(filepath, is_dir, index_argument):
+    if is_allowed_path(filepath, is_dir):
+        logging.info("synoindex %s %s" % (index_argument, filepath))
+        subprocess.call(["synoindex", index_argument, filepath])
+        # Remove from list of modified files.
+        try:
+            modified_files.remove(filepath)
+        except KeyError:
+            logging.debug("Modified file has already been removed from list")
+            pass
+    else:
+        logging.warning("%s is not an allowed path" % filepath)
      
-    def process_create(self, event):
-        arg = ""
-        if event.dir:
-            arg = "-A"
-        else:
-            arg = "-a"
-        self.do_index_command(event, arg)
-     
-    def process_delete(self, event):
-        arg = ""
-        if event.dir:
-            arg = "-D"
-        else:
-            arg = "-d"
-        self.do_index_command(event, arg)
          
-    def process_IN_MODIFY(self, event):
-        if self.is_allowed_path(event.pathname, event.dir):
-            self.modified_files.add(event.pathname)
-                 
-    def process_IN_CLOSE_WRITE(self, event):
-        # ignore close_write unlesss the file has previously been modified.
-        if (event.pathname in self.modified_files):
-            self.do_index_command(event, "-a")
-         
-    def do_index_command(self, event, index_argument):
-        if self.is_allowed_path(event.pathname, event.dir):
-            logging.info("synoindex %s %s" % (index_argument, event.pathname))
-            subprocess.call(["synoindex", index_argument, event.pathname])
-            # Remove from list of modified files.
-            try:
-                self.modified_files.remove(event.pathname)
-            except KeyError:
-                logging.debug("Modified file has already been removed from list")
-                pass
-        else:
-            logging.warning("%s is not an allowed path" % event.pathname)
-         
-             
-    def is_allowed_path(self, filename, is_dir):
-        # Don't check the extension for directories
-        if not is_dir:
-            ext = os.path.splitext(filename)[1][1:].lower()
-            if ext in excluded_exts:
-                return False
-        if filename.find("@eaDir") > 0:
+def is_allowed_path(filepath, is_dir):
+    # Don't check the extension for directories
+    if not is_dir:
+        ext = os.path.splitext(filepath)[1][1:].lower()
+        if ext in excluded_exts:
             return False
-        return True
-
+    if os.path.basename(filepath) == b"@eaDir":
+        return False
+    return True
+ 
+def add_watch_recursive(inotify, path, mask):
+  for root, dirs, files in os.walk(path):
+    wd = inotify.add_watch(root, mask)
+    watch_roots[wd] = root
 
 def start():
     parser = argparse.ArgumentParser()
@@ -112,19 +97,42 @@ def start():
         format="%(asctime)s %(levelname)s %(message)s")
     
     signal.signal(signal.SIGTERM, sigterm)
+    
+    inotify = INotify()
+    mask = flags.CLOSE_WRITE | flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
+    add_watch_recursive(inotify, b"/volume1/music", mask)
+    add_watch_recursive(inotify, b"/volume1/photo", mask)
+    add_watch_recursive(inotify, b"/volume1/video", mask)
 
-    mask = pyinotify.IN_CLOSE_WRITE | pyinotify.IN_DELETE | pyinotify.IN_CREATE | pyinotify.IN_MOVED_TO | pyinotify.IN_MOVED_FROM
-    handler = EventHandler()
-    wm = pyinotify.WatchManager()
-    notifier = pyinotify.Notifier(wm, handler)
-    wdd = wm.add_watch(["/volume1/music", "/volume1/photo", "/volume1/video"],
-        mask, rec=True, auto_add=True)
     logging.info("Watching for media file changes...")
-    notifier.loop(daemonize=args.daemon, pid_file=args.pidfile)
+
+    try:
+        while True:
+            for event in inotify.read():
+                is_dir = event.mask & flags.ISDIR
+                filepath = os.path.join(watch_roots[event.wd], str.encode(event.name))
+                if event.mask & flags.CREATE or event.mask & flags.MOVED_TO:
+                  process_create(filepath, is_dir)
+                elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
+                  process_delete(filepath, is_dir)
+                elif event.mask & flags.MODIFY:
+                  process_IN_MODIFY(filepath, is_dir)
+                elif event.mask & flags.CLOSE_WRITE:
+                  process_IN_CLOSE_WRITE(filepath, is_dir)
+            # Just wait one second until we query inotify again
+            time.sleep(1)
+    except KeyboardInterrupt:
+        logging.info("Watching interrupted by user (CTRL+C)")
 
 def sigterm(signal, frame):
     logging.info("Process received SIGTERM signal")
     sys.exit(0)
+
+# TODO The original script only allowed certain extensions.
+#      Maybe we should have a whilelist and a blacklist.
+excluded_exts = ["tmp"]
+modified_files = set()
+watch_roots = {}
 
 if __name__ == "__main__":
     try:

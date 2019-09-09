@@ -51,15 +51,15 @@ Synoindex Watcher can also be run as a daemon. Use the following commands to cre
 Synoindex Watcher in the background when your DiskStation boots:
 
 ```
-$ python -m synoindexwatcher --generate-init | sudo tee /usr/local/etc/rc.d/S99synoindexwatcher
-$ sudo chmod a+x /usr/local/etc/rc.d/S99synoindexwatcher
+$ python -m synoindexwatcher --generate-init | sudo tee /usr/local/etc/rc.d/S99synoindexwatcher.sh
+$ sudo chmod a+x /usr/local/etc/rc.d/S99synoindexwatcher.sh
 ```
 
 You can also use the saved init-script to stop and start the Synoindex Watcher daemon:
 
 ```
-$ sudo /usr/local/etc/rc.d/S99synoindexwatcher stop
-$ sudo /usr/local/etc/rc.d/S99synoindexwatcher start
+$ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh stop
+$ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh start
 ```
 
 ----

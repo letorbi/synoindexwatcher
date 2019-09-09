@@ -27,6 +27,8 @@ import time
 
 from inotify_simple import INotify, flags
 
+import init
+
 def process_create(filepath, is_dir):
     arg = ""
     if is_dir:
@@ -98,9 +100,15 @@ def start():
         help="set the log-file for program messages (default: none)")
     parser.add_argument("--loglevel", default="INFO",
         help="set the minimum level that shall be logged (default: INFO)")
+    parser.add_argument("--generate-init", action="store_const", const=True,
+        default=False, help="generate and print an init-script")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
-        help="set the pid-file, if watcher runs as a daemon (default: /var/run/synoindexwatcher.pid)")
+        help="set the pid-file used in the init-script (default: /var/run/synoindexwatcher.pid)")
     args = parser.parse_args()
+
+    if args.generate_init:
+      print(init.generate(args.pidfile, args.logfile, args.loglevel))
+      exit(0)
 
     logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
         format="%(asctime)s %(levelname)s %(message)s")

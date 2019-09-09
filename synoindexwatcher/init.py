@@ -3,7 +3,7 @@ import os
 def generate(pid_file, log_file, log_level):
     pid_path = os.path.dirname(pid_file)
     if not log_file:
-      log_file = "/dev/null"
+      log_file = "/var/log/synoindexwatcher.log"
 
     return """#!/bin/sh
 

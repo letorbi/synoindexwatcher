@@ -86,7 +86,7 @@ def start():
     signal.signal(signal.SIGTERM, sigterm)
     
     inotify = INotify()
-    mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MOVE_SELF | flags.MODIFY
+    mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
     inotify.add_watch_recursive(b"/volume1/music", mask, is_allowed_path)
     inotify.add_watch_recursive(b"/volume1/photo", mask, is_allowed_path)
     inotify.add_watch_recursive(b"/volume1/video", mask, is_allowed_path)

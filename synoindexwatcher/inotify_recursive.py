@@ -27,6 +27,7 @@ class INotify(inotify_simple.INotify):
       inotify_simple.INotify.__init__(self)
       self.__last_moved_to = None
       self.__watch_info = {}
+      self.__watch_info_delete_queue = []
   
   def __add_watch_recursive(self, path, mask, filter, head, tail, parent):
       try:
@@ -67,6 +68,10 @@ class INotify(inotify_simple.INotify):
       return path
 
   def read(self):
+      for wd in self.__watch_info_delete_queue:
+          logging.debug("Removing info for watch %d: %s" % (wd, self.__watch_info[wd]))
+          del self.__watch_info[wd]
+      self.__watch_info_delete_queue = []
       events = []
       for event in inotify_simple.INotify.read(self):
           if event.wd in self.__watch_info:
@@ -78,13 +83,14 @@ class INotify(inotify_simple.INotify):
                       path = os.path.join(head, tail)
                       self.__add_watch_recursive(path, mask, self.__watch_info[event.wd]["filter"], head, tail, event.wd)
                   elif event.mask & flags.MOVED_TO:
-                      self.__last_moved_to = str.encode(event.name)
-                  elif event.mask & flags.MOVE_SELF:
-                      self.__watch_info[event.wd]["name"] = self.__last_moved_to
-                      logging.debug("Updated info for watch %d: %s" % (event.wd, self.__watch_info[event.wd]))
-                  elif event.mask & flags.IGNORED:
-                      logging.debug("Removing info for watch %d: %s" % (event.wd, self.__watch_info[event.wd]))
-                      del self.__watch_info[event.wd]
+                      self.__last_moved_to = [str.encode(event.name), event.wd] # name, parent
+              elif event.mask & flags.MOVE_SELF:
+                  self.__watch_info[event.wd]["name"] = self.__last_moved_to[0]
+                  self.__watch_info[event.wd]["parent"] = self.__last_moved_to[1]
+                  logging.debug("Updated info for watch %d: %s" % (event.wd, self.__watch_info[event.wd]))
+              elif event.mask & flags.IGNORED:
+                  logging.debug("Queueing info for watch %d for removal" % (event.wd))
+                  self.__watch_info_delete_queue.append(event.wd)
               if (event.mask & mask):
                   events.append(event)
           else:

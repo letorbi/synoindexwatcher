@@ -25,9 +25,8 @@ import argparse
 import logging
 import time
 
-from inotify_simple import INotify, flags
-
 import init
+from inotify_recursive import INotify, flags
 
 def process_create(filepath, is_dir):
     arg = ""
@@ -51,11 +50,11 @@ def process_modify(filepath, is_dir):
 def do_index_command(filepath, is_dir, index_argument):
     if is_allowed_path(filepath, is_dir):
         logging.info("synoindex %s %s" % (index_argument, filepath))
-        subprocess.call(["synoindex", index_argument, filepath])
+        #subprocess.call(["synoindex", index_argument, filepath])
     else:
         logging.warning("%s is not an allowed path" % filepath)
      
-def is_allowed_path(filepath, is_dir):
+def is_allowed_path(filepath, is_dir = True):
     # Don't check the extension for directories
     if not is_dir:
         ext = os.path.splitext(filepath)[1][1:].lower()
@@ -64,35 +63,6 @@ def is_allowed_path(filepath, is_dir):
     if os.path.basename(filepath) == b"@eaDir":
         return False
     return True
- 
-def add_watch_recursive(inotify, root, name, mask, parent = -1):
-  try:
-      path = os.path.join(root, name)
-      wd = inotify.add_watch(path, mask)
-      watch_info[wd] = {
-          "name":  path if parent == -1 else name,
-        "parent": parent
-      }
-      logging.debug("Added info for watch %d: %s" % (wd, watch_info[wd]))
-      for entry in os.listdir(path):
-          entrypath = os.path.join(path, entry)
-          if os.path.isdir(entrypath) and is_allowed_path(entrypath, True):
-              add_watch_recursive(inotify, path, entry, mask, wd)
-  except OSError as e:
-    if e.errno == 2:
-        logging.debug("Watch-path cannot be found anymore: %s" % path)
-        pass
-    else:
-        raise
-
-def get_watch_path(wd):
-  path = watch_info[wd]["name"]
-  parent = watch_info[wd]["parent"]
-  while parent != -1:
-    wd = parent
-    path = os.path.join(watch_info[wd]["name"], path)
-    parent = watch_info[wd]["parent"]
-  return path
 
 def start():
     parser = argparse.ArgumentParser()
@@ -117,36 +87,23 @@ def start():
     
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MOVE_SELF | flags.MODIFY
-    add_watch_recursive(inotify, b"/volume1", b"music", mask)
-    add_watch_recursive(inotify, b"/volume1", b"photo", mask)
-    add_watch_recursive(inotify, b"/volume1", b"video", mask)
+    inotify.add_watch_recursive(b"/volume1/music", mask, is_allowed_path)
+    inotify.add_watch_recursive(b"/volume1/photo", mask, is_allowed_path)
+    inotify.add_watch_recursive(b"/volume1/video", mask, is_allowed_path)
 
     logging.info("Watching for media file changes...")
 
     try:
-        last_moved_to = None
         while True:
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
-                root = get_watch_path(event.wd)
-                name = str.encode(event.name)
-                path = os.path.join(root, name)
+                path = inotify.get_path(event.wd)
                 if event.mask & flags.CREATE or event.mask & flags.MOVED_TO:
-                  if is_dir and event.mask & flags.CREATE:
-                    add_watch_recursive(inotify, root, name, mask, event.wd)
-                  if is_dir and event.mask & flags.MOVED_TO:
-                    last_moved_to = name
-                  process_create(path, is_dir)
+                    process_create(path, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
-                  process_delete(path, is_dir)
+                    process_delete(path, is_dir)
                 elif event.mask & flags.MODIFY:
-                  process_modify(path, is_dir)
-                elif event.mask & flags.MOVE_SELF:
-                  watch_info[event.wd]["name"] = last_moved_to
-                  logging.debug("Updated info for watch %d: %s" % (event.wd, watch_info[event.wd]))
-                elif event.mask & flags.IGNORED:
-                  logging.debug("Removing info for watch %d: %s" % (event.wd, watch_info[event.wd]))
-                  del watch_info[event.wd]
+                    process_modify(path, is_dir)
             # Just wait one second until we query inotify again
             time.sleep(1)
     except KeyboardInterrupt:
@@ -159,7 +116,6 @@ def sigterm(signal, frame):
 # TODO The original script only allowed certain extensions.
 #      Maybe we should have a whilelist and a blacklist.
 excluded_exts = ["tmp"]
-watch_info = {}
 
 if __name__ == "__main__":
     try:

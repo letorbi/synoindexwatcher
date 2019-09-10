@@ -104,8 +104,6 @@ def start():
                     process_delete(path, is_dir)
                 elif event.mask & flags.MODIFY:
                     process_modify(path, is_dir)
-            # Just wait one second until we query inotify again
-            time.sleep(1)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
 

@@ -33,6 +33,7 @@ class INotify(inotify_simple.INotify):
         try:
             wd = inotify_simple.INotify.add_watch(self, path, mask | flags.IGNORED | flags.CREATE | flags.MOVED_TO | flags.MOVE_SELF)
             if wd in self.__watch_info:
+                logging.debug("Watch %d already exists: %s" % (wd, self.__watch_info[wd]))
                 return wd
             self.__watch_info[wd] = {
                 # TODO Join existing and new filter via `or` or clear existing filter if new one equals `None`.
@@ -76,13 +77,13 @@ class INotify(inotify_simple.INotify):
         for event in inotify_simple.INotify.read(self):
             if event.wd in self.__watch_info:
                 mask = self.__watch_info[event.wd]["mask"]
-                if event.mask & flags.ISDIR:
-                    if event.mask & flags.CREATE:
-                        head = self.get_path(event.wd)
-                        tail = str.encode(event.name)
-                        path = os.path.join(head, tail)
-                        self.__add_watch_recursive(path, mask, self.__watch_info[event.wd]["filter"], head, tail, event.wd)
-                    elif event.mask & flags.MOVED_TO:
+                if event.mask & (flags.ISDIR | flags.CREATE | flags.MOVED_TO) > flags.ISDIR:
+                    filter = self.__watch_info[event.wd]["filter"]
+                    head = self.get_path(event.wd)
+                    tail = str.encode(event.name)
+                    path = os.path.join(head, tail)
+                    self.__add_watch_recursive(path, mask, filter, head, tail, event.wd)
+                    if event.mask & flags.MOVED_TO:
                         self.__last_moved_to = [str.encode(event.name), event.wd] # name, parent
                 elif event.mask & flags.MOVE_SELF:
                     if self.__last_moved_to != None and self.__last_moved_to[1] in self.__watch_info:

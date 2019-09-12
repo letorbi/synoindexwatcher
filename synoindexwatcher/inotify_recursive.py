@@ -25,7 +25,6 @@ from inotify_simple import *
 class INotify(inotify_simple.INotify):
     def __init__(self):
         inotify_simple.INotify.__init__(self)
-        self.__last_moved_to = None
         self.__watch_info = {}
         self.__watch_info_delete_queue = []
 
@@ -70,9 +69,10 @@ class INotify(inotify_simple.INotify):
 
     def read(self):
         events = []
+        moved_to = None
         for wd in self.__watch_info_delete_queue:
-            logging.debug("Removing info for watch %d: %s" % (wd, self.__watch_info[wd]))
             del self.__watch_info[wd]
+            logging.debug("Removed info for watch %d" % (wd))
         self.__watch_info_delete_queue = []
         for event in inotify_simple.INotify.read(self):
             if event.wd in self.__watch_info:
@@ -84,16 +84,15 @@ class INotify(inotify_simple.INotify):
                     path = os.path.join(head, tail)
                     self.__add_watch_recursive(path, mask, filter, head, tail, event.wd)
                     if event.mask & flags.MOVED_TO:
-                        self.__last_moved_to = [str.encode(event.name), event.wd] # name, parent
+                        moved_to = (str.encode(event.name), event.wd) # name, parent
                 elif event.mask & flags.MOVE_SELF:
-                    if self.__last_moved_to != None and self.__last_moved_to[1] in self.__watch_info:
-                      self.__watch_info[event.wd]["name"] = self.__last_moved_to[0]
-                      self.__watch_info[event.wd]["parent"] = self.__last_moved_to[1]
-                      logging.debug("Updated info for watch %d: %s" % (event.wd, self.__watch_info[event.wd]))
-                    else:
-                      logging.debug("Going to remove watch %d" % (event.wd))
+                    if moved_to == None:
                       inotify_simple.INotify.rm_watch(self, event.wd)
-                    self.__last_moved_to = None
+                      logging.debug("Removed watch %d" % (event.wd))
+                    else:
+                      self.__watch_info[event.wd]["name"] = moved_to[0]
+                      self.__watch_info[event.wd]["parent"] = moved_to[1]
+                      logging.debug("Updated info for watch %d: %s" % (event.wd, self.__watch_info[event.wd]))
                 elif event.mask & flags.IGNORED:
                     logging.debug("Queueing info for watch %d for removal" % (event.wd))
                     self.__watch_info_delete_queue.append(event.wd)

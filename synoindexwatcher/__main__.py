@@ -46,14 +46,14 @@ def process_delete(filepath, is_dir):
 
 def process_modify(filepath, is_dir):
     do_index_command(filepath, is_dir, "-a")
-     
+
 def do_index_command(filepath, is_dir, index_argument):
     if is_allowed_path(filepath, is_dir):
         logging.info("synoindex %s %s" % (index_argument, filepath))
         #subprocess.call(["synoindex", index_argument, filepath])
     else:
         logging.warning("%s is not an allowed path" % filepath)
-     
+
 def is_allowed_path(filepath, is_dir = True):
     # Don't check the extension for directories
     if not is_dir:
@@ -77,14 +77,14 @@ def start():
     args = parser.parse_args()
 
     if args.generate_init:
-      print(init.generate(args.pidfile, args.logfile, args.loglevel))
-      exit(0)
+        print(init.generate(args.pidfile, args.logfile, args.loglevel))
+        exit(0)
 
     logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
         format="%(asctime)s %(levelname)s %(message)s")
-    
+
     signal.signal(signal.SIGTERM, sigterm)
-    
+
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
     inotify.add_watch_recursive(b"/volume1/music", mask, is_allowed_path)

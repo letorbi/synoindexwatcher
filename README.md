@@ -15,8 +15,9 @@ blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-aut
 
 ## Installation
 
-I recommend to use pip for the installation. Synology DiskStations do not have pip installed by default, but you can add
-it easily with the following command:
+Synoindex Watcher cannot be installed via Synology's Package Center. You have to log in via SSH and use the terminal.
+I recommend to use pip for the installation. Synology DiskStations do not have pip installed by default, but you can
+add it easily with the following command:
 
 ```
 $ sudo python -m ensurepip

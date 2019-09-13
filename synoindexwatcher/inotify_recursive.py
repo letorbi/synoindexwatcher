@@ -28,13 +28,13 @@ class INotify(inotify_simple.INotify):
         self.__tree = {}
         self.__tree_delete_queue = []
 
-    def __add_watch_recursive(self, path, mask, filter, head, tail, parent):
+    def __add_watch_recursive(self, path, mask, filter, head, tail, parent, loose = True):
         try:
             wd = inotify_simple.INotify.add_watch(self, path, mask | flags.IGNORED | flags.CREATE | flags.MOVED_FROM | flags.MOVED_TO)
         except OSError as e:
-            if e.errno == 2:
+            if loose and e.errno == 2:
                 logging.debug("Watch-path cannot be found anymore: %s" % path)
-                pass
+                return
             else:
                 raise
         name = path if parent == -1 else tail
@@ -66,22 +66,23 @@ class INotify(inotify_simple.INotify):
                     self.__add_watch_recursive(entrypath, mask, filter, path, entry, wd)
         return wd
 
-    def __rm_watch_recursive(self, wd):
-        children = self.__tree[wd]["children"]
-        for name in children:
-            self.rm_watch_recursive(children[name])
+    def __rm_watch_recursive(self, wd, loose = True):
+        if wd in self.__tree:
+            children = self.__tree[wd]["children"]
+            for name in children:
+                self.rm_watch_recursive(children[name])
         try:
             inotify_simple.INotify.rm_watch(self, wd)
         except OSError as e:
-            if e.errno == 22:
+            if loose and e.errno == 22:
                 logging.debug("Cannot remove watch, because it does not exist anymore: %d" % wd)
-                pass
+                return
             else:
                 raise
 
     def add_watch_recursive(self, path, mask, filter = None):
         (head, tail) = os.path.split(path)
-        return self.__add_watch_recursive(path, mask, filter, head, tail, -1)
+        return self.__add_watch_recursive(path, mask, filter, head, tail, -1, False)
 
     def get_path(self, wd):
         path = self.__tree[wd]["name"]
@@ -117,7 +118,7 @@ class INotify(inotify_simple.INotify):
                     elif event.mask & flags.MOVED_FROM:
                         remove_queue[event.cookie] = self.__tree[event.wd]["children"][tail]
                 elif event.mask & flags.IGNORED:
-                    logging.debug("Queueing info for watch %d for removal" % (event.wd))
+                    logging.debug("Going to remove info for watch %d" % (event.wd))
                     self.__tree_delete_queue.append(event.wd)
                 if (event.mask & mask):
                     events.append(event)
@@ -130,4 +131,4 @@ class INotify(inotify_simple.INotify):
         return events
 
     def rm_watch_recursive(self, wd):
-        seld.__rm_watch_recursive(wd)
+        self.__rm_watch_recursive(wd, False)

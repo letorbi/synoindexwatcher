@@ -113,7 +113,7 @@ class INotify(inotify_simple.INotify):
                         head = self.get_path(event.wd)
                         path = os.path.join(head, tail)
                         self.__add_watch_recursive(path, mask, filter, head, tail, event.wd)
-                        if event.mask & flags.MOVED_TO:
+                        if event.mask & flags.MOVED_TO and event.cookie in moved_queue:
                             del moved_queue[event.cookie]
                     elif event.mask & flags.MOVED_FROM:
                         moved_queue[event.cookie] = self.__info[event.wd]["children"][tail]

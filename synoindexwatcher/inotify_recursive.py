@@ -31,27 +31,30 @@ class INotify(inotify_simple.INotify):
     def __add_watch_recursive(self, path, mask, filter, head, tail, parent):
         try:
             wd = inotify_simple.INotify.add_watch(self, path, mask | flags.IGNORED | flags.CREATE | flags.MOVED_TO | flags.MOVE_SELF)
-            if wd in self.__watch_info:
-                logging.debug("Watch %d already exists: %s" % (wd, self.__watch_info[wd]))
-                return wd
-            self.__watch_info[wd] = {
-                # TODO Join existing and new filter via `or` or clear existing filter if new one equals `None`.
-                "filter": filter,
-                "mask": mask,
-                "name": path if parent == -1 else tail,
-                "parent": parent
-            }
-            logging.debug("Added info for watch %d: %s" % (wd, self.__watch_info[wd]))
         except OSError as e:
             if e.errno == 2:
                 logging.debug("Watch-path cannot be found anymore: %s" % path)
                 pass
             else:
                 raise
-        for entry in os.listdir(path):
-            entrypath = os.path.join(path, entry)
-            if os.path.isdir(entrypath) and (filter == None or filter(entrypath)):
-                self.__add_watch_recursive(entrypath, mask, filter, path, entry, wd)
+        name = path if parent == -1 else tail
+        if wd in self.__watch_info:
+            self.__watch_info[wd]["name"] = name
+            self.__watch_info[wd]["parent"] = parent
+            logging.debug("Updated info for watch %d: %s" % (wd, self.__watch_info[wd]))
+        else:
+            self.__watch_info[wd] = {
+                # TODO Join existing and new filter via `or` or clear existing filter if new one equals `None`.
+                "filter": filter,
+                "mask": mask,
+                "name": name,
+                "parent": parent
+            }
+            logging.debug("Added info for watch %d: %s" % (wd, self.__watch_info[wd]))
+            for entry in os.listdir(path):
+                entrypath = os.path.join(path, entry)
+                if os.path.isdir(entrypath) and (filter == None or filter(entrypath)):
+                    self.__add_watch_recursive(entrypath, mask, filter, path, entry, wd)
         return wd
 
     def add_watch_recursive(self, path, mask, filter = None):
@@ -69,7 +72,7 @@ class INotify(inotify_simple.INotify):
 
     def read(self):
         events = []
-        moved_to = None
+        moved_to = False
         for wd in self.__watch_info_delete_queue:
             del self.__watch_info[wd]
             logging.debug("Removed info for watch %d" % (wd))
@@ -84,15 +87,11 @@ class INotify(inotify_simple.INotify):
                     path = os.path.join(head, tail)
                     self.__add_watch_recursive(path, mask, filter, head, tail, event.wd)
                     if event.mask & flags.MOVED_TO:
-                        moved_to = (str.encode(event.name), event.wd) # name, parent
+                        moved_to = True
                 elif event.mask & flags.MOVE_SELF:
-                    if moved_to == None:
+                    if not moved_to:
                       inotify_simple.INotify.rm_watch(self, event.wd)
                       logging.debug("Removed watch %d" % (event.wd))
-                    else:
-                      self.__watch_info[event.wd]["name"] = moved_to[0]
-                      self.__watch_info[event.wd]["parent"] = moved_to[1]
-                      logging.debug("Updated info for watch %d: %s" % (event.wd, self.__watch_info[event.wd]))
                 elif event.mask & flags.IGNORED:
                     logging.debug("Queueing info for watch %d for removal" % (event.wd))
                     self.__watch_info_delete_queue.append(event.wd)

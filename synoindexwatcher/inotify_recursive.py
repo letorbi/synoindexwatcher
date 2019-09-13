@@ -25,8 +25,8 @@ from inotify_simple import *
 class INotify(inotify_simple.INotify):
     def __init__(self):
         inotify_simple.INotify.__init__(self)
-        self.__tree = {}
-        self.__tree_delete_queue = []
+        self.__info = {}
+        self.__cleanup_queue = []
 
     def __add_watch_recursive(self, path, mask, filter, head, tail, parent, loose = True):
         try:
@@ -38,20 +38,20 @@ class INotify(inotify_simple.INotify):
             else:
                 raise
         name = path if parent == -1 else tail
-        if wd in self.__tree:
+        if wd in self.__info:
             if parent != -1:
-                old_parent = self.__tree[wd]["parent"]
-                del self.__tree[old_parent]["children"][name]
-                self.__tree[parent]["children"][name] = wd
-            self.__tree[wd]["name"] = name
-            self.__tree[wd]["parent"] = parent
+                old_parent = self.__info[wd]["parent"]
+                del self.__info[old_parent]["children"][name]
+                self.__info[parent]["children"][name] = wd
+            self.__info[wd]["name"] = name
+            self.__info[wd]["parent"] = parent
             if parent != -1:
-                self.__tree[parent]["children"][name] = wd
-            logging.debug("Updated info for watch %d: %s" % (wd, self.__tree[wd]))
+                self.__info[parent]["children"][name] = wd
+            logging.debug("Updated info for watch %d: %s" % (wd, self.__info[wd]))
         else:
             if parent != -1:
-                self.__tree[parent]["children"][name] = wd
-            self.__tree[wd] = {
+                self.__info[parent]["children"][name] = wd
+            self.__info[wd] = {
                 "children": {},
                 # TODO Join existing and new filter via `or` or clear existing filter if new one equals `None`.
                 "filter": filter,
@@ -59,7 +59,7 @@ class INotify(inotify_simple.INotify):
                 "name": name,
                 "parent": parent
             }
-            logging.debug("Added info for watch %d: %s" % (wd, self.__tree[wd]))
+            logging.debug("Added info for watch %d: %s" % (wd, self.__info[wd]))
             for entry in os.listdir(path):
                 entrypath = os.path.join(path, entry)
                 if os.path.isdir(entrypath) and (filter == None or filter(entrypath)):
@@ -67,8 +67,8 @@ class INotify(inotify_simple.INotify):
         return wd
 
     def __rm_watch_recursive(self, wd, loose = True):
-        if wd in self.__tree:
-            children = self.__tree[wd]["children"]
+        if wd in self.__info:
+            children = self.__info[wd]["children"]
             for name in children:
                 self.rm_watch_recursive(children[name])
         try:
@@ -85,47 +85,47 @@ class INotify(inotify_simple.INotify):
         return self.__add_watch_recursive(path, mask, filter, head, tail, -1, False)
 
     def get_path(self, wd):
-        path = self.__tree[wd]["name"]
-        parent = self.__tree[wd]["parent"]
+        path = self.__info[wd]["name"]
+        parent = self.__info[wd]["parent"]
         while parent != -1:
             wd = parent
-            path = os.path.join(self.__tree[wd]["name"], path)
-            parent = self.__tree[wd]["parent"]
+            path = os.path.join(self.__info[wd]["name"], path)
+            parent = self.__info[wd]["parent"]
         return path
 
     def read(self):
         events = []
-        remove_queue = {}
-        for wd in self.__tree_delete_queue:
-            name = self.__tree[wd]["name"]
-            parent = self.__tree[wd]["parent"]
-            del self.__tree[parent]["children"][name]
-            del self.__tree[wd]
-            logging.debug("Removed info for watch %d" % (wd))
-        self.__tree_delete_queue = []
+        moved_queue = {}
+        for wd in self.__cleanup_queue:
+            name = self.__info[wd]["name"]
+            parent = self.__info[wd]["parent"]
+            del self.__info[parent]["children"][name]
+            del self.__info[wd]
+            logging.debug("Cleaned info for watch %d" % (wd))
+        self.__cleanup_queue = []
         for event in inotify_simple.INotify.read(self):
-            if event.wd in self.__tree:
-                mask = self.__tree[event.wd]["mask"]
+            if event.wd in self.__info:
+                mask = self.__info[event.wd]["mask"]
                 if event.mask & flags.ISDIR:
                     tail = str.encode(event.name)
                     if event.mask & (flags.CREATE | flags.MOVED_TO):
-                        filter = self.__tree[event.wd]["filter"]
+                        filter = self.__info[event.wd]["filter"]
                         head = self.get_path(event.wd)
                         path = os.path.join(head, tail)
                         self.__add_watch_recursive(path, mask, filter, head, tail, event.wd)
                         if event.mask & flags.MOVED_TO:
-                            del remove_queue[event.cookie]
+                            del moved_queue[event.cookie]
                     elif event.mask & flags.MOVED_FROM:
-                        remove_queue[event.cookie] = self.__tree[event.wd]["children"][tail]
+                        moved_queue[event.cookie] = self.__info[event.wd]["children"][tail]
                 elif event.mask & flags.IGNORED:
                     logging.debug("Going to remove info for watch %d" % (event.wd))
-                    self.__tree_delete_queue.append(event.wd)
+                    self.__cleanup_queue.append(event.wd)
                 if (event.mask & mask):
                     events.append(event)
             else:
                 events.append(event)
-        for cookie in remove_queue:
-            wd = remove_queue[cookie]
+        for cookie in moved_queue:
+            wd = moved_queue[cookie]
             self.rm_watch_recursive(wd)
             logging.debug("Removed watch %d" % (wd))
         return events

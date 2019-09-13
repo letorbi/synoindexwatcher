@@ -39,11 +39,20 @@ class INotify(inotify_simple.INotify):
                 raise
         name = path if parent == -1 else tail
         if wd in self.__watch_info:
+            if parent != -1:
+                old_parent = self.__watch_info[wd]["parent"]
+                del self.__watch_info[old_parent]["children"][name]
+                self.__watch_info[parent]["children"][name] = wd
             self.__watch_info[wd]["name"] = name
             self.__watch_info[wd]["parent"] = parent
+            if parent != -1:
+                self.__watch_info[parent]["children"][name] = wd
             logging.debug("Updated info for watch %d: %s" % (wd, self.__watch_info[wd]))
         else:
+            if parent != -1:
+                self.__watch_info[parent]["children"][name] = wd
             self.__watch_info[wd] = {
+                "children": {},
                 # TODO Join existing and new filter via `or` or clear existing filter if new one equals `None`.
                 "filter": filter,
                 "mask": mask,
@@ -74,6 +83,9 @@ class INotify(inotify_simple.INotify):
         events = []
         moved_to = False
         for wd in self.__watch_info_delete_queue:
+            name = self.__watch_info[wd]["name"]
+            parent = self.__watch_info[wd]["parent"]
+            del self.__watch_info[parent]["children"][name]
             del self.__watch_info[wd]
             logging.debug("Removed info for watch %d" % (wd))
         self.__watch_info_delete_queue = []

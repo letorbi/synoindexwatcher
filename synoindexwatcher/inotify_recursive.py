@@ -29,16 +29,15 @@ class INotify(inotify_simple.INotify):
         self.__cleanup_queue = []
 
     def __add_info(self, wd, name, mask, filter, parent):
-        if parent != -1:
-            self.__info[parent]["children"][name] = wd
         self.__info[wd] = {
             "children": {},
-            # TODO Join existing and new filter via `or` or clear existing filter if new one equals `None`.
             "filter": filter,
             "mask": mask,
             "name": name,
             "parent": parent
         }
+        if parent != -1:
+            self.__info[parent]["children"][name] = wd
         logging.debug("Added info for watch %d: %s" % (wd, self.__info[wd]))
 
     def __clr_info(self, wd):
@@ -51,10 +50,10 @@ class INotify(inotify_simple.INotify):
         self.__cleanup_queue = []
 
     def __set_info(self, wd, name, parent):
-        if parent != -1:
-            old_parent = self.__info[wd]["parent"]
-            del self.__info[old_parent]["children"][name]
-            self.__info[parent]["children"][name] = wd
+        old_parent = self.__info[wd]["parent"]
+        if old_parent != -1:
+            old_name = self.__info[wd]["name"]
+            del self.__info[old_parent]["children"][old_name]
         self.__info[wd]["name"] = name
         self.__info[wd]["parent"] = parent
         if parent != -1:
@@ -68,7 +67,7 @@ class INotify(inotify_simple.INotify):
         del self.__info[wd]
         logging.debug("Removed info for watch %d" % (wd))
 
-    def __add_watch_recursive(self, path, mask, filter, head, tail, parent, loose = True):
+    def __add_watch_recursive(self, path, mask, filter, tail, parent, loose = True):
         try:
             wd = inotify_simple.INotify.add_watch(self, path, mask | flags.IGNORED | flags.CREATE | flags.MOVED_FROM | flags.MOVED_TO)
             logging.debug("Added watch %d" % (wd))
@@ -80,13 +79,13 @@ class INotify(inotify_simple.INotify):
                 raise
         name = path if parent == -1 else tail
         if wd in self.__info:
-            self.set_info(wd, name, parent)
+            self.__set_info(wd, name, parent)
         else:
             self.__add_info(wd, name, mask, filter, parent)
             for entry in os.listdir(path):
                 entrypath = os.path.join(path, entry)
                 if os.path.isdir(entrypath) and (filter == None or filter(entrypath)):
-                    self.__add_watch_recursive(entrypath, mask, filter, path, entry, wd)
+                    self.__add_watch_recursive(entrypath, mask, filter, entry, wd)
         return wd
 
     def __rm_watch_recursive(self, wd, loose = True):
@@ -94,19 +93,19 @@ class INotify(inotify_simple.INotify):
             children = self.__info[wd]["children"]
             for name in children:
                 self.rm_watch_recursive(children[name])
-        try:
-            inotify_simple.INotify.rm_watch(self, wd)
-            logging.debug("Removed watch %d" % (wd))
-        except OSError as e:
-            if loose and e.errno == 22:
-                logging.debug("Cannot remove watch, descriptor does not exist: %d" % wd)
-                return
-            else:
-                raise
+            try:
+                inotify_simple.INotify.rm_watch(self, wd)
+                logging.debug("Removed watch %d" % (wd))
+            except OSError as e:
+                if loose and e.errno == 22:
+                    logging.debug("Cannot remove watch, descriptor does not exist: %d" % wd)
+                    return
+                else:
+                    raise
 
     def add_watch_recursive(self, path, mask, filter = None):
-        (head, tail) = os.path.split(path)
-        return self.__add_watch_recursive(path, mask, filter, head, tail, -1, False)
+        tail = os.path.split(path)[1]
+        return self.__add_watch_recursive(path, mask, filter, tail, -1, False)
 
     def rm_watch_recursive(self, wd):
         self.__rm_watch_recursive(wd, False)
@@ -126,18 +125,17 @@ class INotify(inotify_simple.INotify):
         moved_from = {}
         for event in inotify_simple.INotify.read(self):
             if event.wd in self.__info:
-                mask = self.__info[event.wd]["mask"]
+                info = self.__info[event.wd]
+                mask = info["mask"]
                 if event.mask & flags.ISDIR:
                     tail = str.encode(event.name)
                     if event.mask & (flags.CREATE | flags.MOVED_TO):
-                        filter = self.__info[event.wd]["filter"]
-                        head = self.get_path(event.wd)
-                        path = os.path.join(head, tail)
-                        self.__add_watch_recursive(path, mask, filter, head, tail, event.wd)
+                        path = os.path.join(self.get_path(event.wd), tail)
+                        self.__add_watch_recursive(path, mask, info["filter"], tail, event.wd)
                         if event.mask & flags.MOVED_TO and event.cookie in moved_from:
                             del moved_from[event.cookie]
                     elif event.mask & flags.MOVED_FROM:
-                        moved_from[event.cookie] = self.__info[event.wd]["children"][tail]
+                        moved_from[event.cookie] = info["children"][tail]
                 elif event.mask & flags.IGNORED:
                     self.__clr_info(event.wd)
                 if (event.mask & mask):

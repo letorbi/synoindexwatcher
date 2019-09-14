@@ -65,4 +65,4 @@ $ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh start
 
 ----
 
-Copyright 2019 Torben Haase \<https://pixelsvsbytes.com>
+Copyright 2019 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>

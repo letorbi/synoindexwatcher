@@ -43,7 +43,7 @@ class INotify(inotify_simple.INotify):
 
     def __clr_info(self, wd):
         self.__cleanup_queue.append(wd)
-        logging.debug("Going to remove info for watch %d" % (wd))
+        logging.debug("Enlist info for watch %d for clean-up" % (wd))
 
     def __clr_infos(self):
         for wd in self.__cleanup_queue:
@@ -74,7 +74,7 @@ class INotify(inotify_simple.INotify):
             logging.debug("Added watch %d" % (wd))
         except OSError as e:
             if loose and e.errno == 2:
-                logging.debug("Watch-path cannot be found anymore: %s" % path)
+                logging.debug("Cannot add watch, path not found: %s" % path)
                 return
             else:
                 raise
@@ -99,7 +99,7 @@ class INotify(inotify_simple.INotify):
             logging.debug("Removed watch %d" % (wd))
         except OSError as e:
             if loose and e.errno == 22:
-                logging.debug("Cannot remove watch, because it does not exist anymore: %d" % wd)
+                logging.debug("Cannot remove watch, descriptor does not exist: %d" % wd)
                 return
             else:
                 raise

@@ -92,7 +92,7 @@ class INotify(inotify_simple.INotify):
         if wd in self.__info:
             children = self.__info[wd]["children"]
             for name in children:
-                self.rm_watch_recursive(children[name])
+                self.__rm_watch_recursive(children[name])
             try:
                 inotify_simple.INotify.rm_watch(self, wd)
                 logging.debug("Removed watch %d" % (wd))

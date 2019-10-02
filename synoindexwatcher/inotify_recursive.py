@@ -42,7 +42,7 @@ class INotify(inotify_simple.INotify):
 
     def __clr_info(self, wd):
         self.__cleanup_queue.append(wd)
-        logging.debug("Enlist info for watch %d for clean-up" % (wd))
+        logging.debug("Enlist info for watch %d for clean-up" % wd)
 
     def __clr_infos(self):
         for wd in self.__cleanup_queue:
@@ -65,12 +65,12 @@ class INotify(inotify_simple.INotify):
         parent = self.__info[wd]["parent"]
         del self.__info[parent]["children"][name]
         del self.__info[wd]
-        logging.debug("Removed info for watch %d" % (wd))
+        logging.debug("Removed info for watch %d" % wd)
 
     def __add_watch_recursive(self, path, mask, filter, tail, parent, loose = True):
         try:
             wd = inotify_simple.INotify.add_watch(self, path, mask | flags.IGNORED | flags.CREATE | flags.MOVED_FROM | flags.MOVED_TO)
-            logging.debug("Added watch %d" % (wd))
+            logging.debug("Added watch %d" % wd)
         except OSError as e:
             if loose and e.errno == 2:
                 logging.debug("Cannot add watch, path not found: %s" % path)
@@ -95,7 +95,7 @@ class INotify(inotify_simple.INotify):
                 self.__rm_watch_recursive(children[name])
             try:
                 inotify_simple.INotify.rm_watch(self, wd)
-                logging.debug("Removed watch %d" % (wd))
+                logging.debug("Removed watch %d" % wd)
             except OSError as e:
                 if loose and e.errno == 22:
                     logging.debug("Cannot remove watch, descriptor does not exist: %d" % wd)

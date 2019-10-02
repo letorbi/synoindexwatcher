@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="synoindexwatcher",
-    version="0.5.3",
+    version="0.6.0",
     author="Torben Haase",
     author_email="torben@pixelsvsbytes.com",
     description="An automated media-index updater for Synology DiskStations based on inotify and synoindex.",
@@ -24,7 +24,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     install_requires=[
-        "enum", # Only for Python 2
-        "inotify_simple"
+        "inotifyrecursive"
     ],
 )

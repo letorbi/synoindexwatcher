@@ -26,7 +26,7 @@ import logging
 import time
 
 import init
-from inotify_recursive import INotify, flags
+from inotifyrecursive import INotify, flags
 
 def process_create(filepath, is_dir):
     arg = ""

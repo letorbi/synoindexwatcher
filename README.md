@@ -29,8 +29,7 @@ Now you can install the synoindexwatcher module:
 $ sudo python -m pip install https://github.com/letorbi/synoindexwatcher/archive/master.zip
 ```
 
-This will also install its dependencies [inotify-simple](https://pypi.org/project/inotify_simple/) and
-[enum](https://pypi.org/project/enum/).
+This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/).
 
 ## Usage
 

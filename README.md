@@ -20,7 +20,7 @@ I recommend to use pip for the installation. Synology DiskStations do not have p
 add it easily with the following command:
 
 ```
-$ sudo python -m ensurepip
+$ wget https://bootstrap.pypa.io/get-pip.py -qO - | sudo python
 ```
 
 Now you can install the synoindexwatcher module:
@@ -61,6 +61,22 @@ You can also use the saved init-script to stop and start the Synoindex Watcher d
 $ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh stop
 $ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh start
 ```
+
+## FAQ
+
+### I'm getting `OSError: [Errno 28] No space left on device`
+
+This actually does not mean that you run out of disk space, but rather that your system does not allow enough
+inode-watchers to watch all your media files. The message is quite confusing, though.
+
+To fix this temporarily you could simply type `echo 204800 > /proc/sys/fs/inotify/max_user_watches` as root. The maximum
+number of inode-watchers in the user-space would be 204800 afterwards, which should be enough for most use-cases.
+Unfortunately this fixes the problem only until the next reboot.
+
+For a permanent solution it is recommended to add the line `fs.inotify.max_user_watches = 204800` to the file
+*/etc/sysctl.conf*. This should set the maximum value during boot, but I had to add an init-script that executes
+`sysctl -p /etc/sysctl.conf` to make it work. The simplest way would be to add the command to the start-section of the
+init-script for Synonindex Watcher.
 
 ----
 

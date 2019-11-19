@@ -55,13 +55,18 @@ def do_index_command(filepath, is_dir, index_argument):
         logging.warning("%s is not an allowed path" % filepath)
 
 def is_allowed_path(filepath, is_dir = True):
+    name = os.path.basename(filepath)
+    # Don't watch hidden files and folders
+    if name[0] == b'.':
+        return False
+    # Don't watch special files and folders
+    if name[0] == b'@':
+        return False
     # Don't check the extension for directories
     if not is_dir:
         ext = os.path.splitext(filepath)[1][1:].lower()
         if ext in excluded_exts:
             return False
-    if os.path.basename(filepath) == b"@eaDir":
-        return False
     return True
 
 def start():

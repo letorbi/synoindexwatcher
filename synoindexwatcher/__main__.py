@@ -48,14 +48,10 @@ def process_modify(filepath, is_dir):
     do_index_command(filepath, is_dir, "-a")
 
 def do_index_command(filepath, is_dir, index_argument):
-    if is_allowed_path(filepath, is_dir):
-        logging.info("synoindex %s %s" % (index_argument, filepath))
-        subprocess.call(["synoindex", index_argument, filepath])
-    else:
-        logging.warning("%s is not an allowed path" % filepath)
+    logging.info("synoindex %s %s" % (index_argument, filepath))
+    subprocess.call(["synoindex", index_argument, filepath])
 
-def is_allowed_path(filepath, is_dir = True):
-    name = os.path.basename(filepath)
+def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
     if name[0] == b'.':
         return False
@@ -64,7 +60,7 @@ def is_allowed_path(filepath, is_dir = True):
         return False
     # Don't check the extension for directories
     if not is_dir:
-        ext = os.path.splitext(filepath)[1][1:].lower()
+        ext = os.path.splitext(name)[1][1:].lower()
         if ext in excluded_exts:
             return False
     return True

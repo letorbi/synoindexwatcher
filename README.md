@@ -20,7 +20,7 @@ I recommend to use pip for the installation. Synology DiskStations do not have p
 add it easily with the following command:
 
 ```
-$ sudo python -m ensurepip
+$ wget https://bootstrap.pypa.io/get-pip.py -qO - | sudo python
 ```
 
 Now you can install the synoindexwatcher module:

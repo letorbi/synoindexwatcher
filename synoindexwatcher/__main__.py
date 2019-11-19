@@ -53,10 +53,10 @@ def do_index_command(filepath, is_dir, index_argument):
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
-    if name[0] == b'.':
+    if name[:1] == b'.':
         return False
     # Don't watch special files and folders
-    if name[0] == b'@':
+    if name[:1] == b'@':
         return False
     # Don't check the extension for directories
     if not is_dir:

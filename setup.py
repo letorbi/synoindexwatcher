@@ -24,6 +24,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     install_requires=[
-        "inotifyrecursive"
+        "inotifyrecursive>=0.2.1"
     ],
 )

@@ -26,10 +26,10 @@ $ wget https://bootstrap.pypa.io/get-pip.py -qO - | sudo python
 Now you can install the synoindexwatcher module:
 
 ```
-$ sudo python -m pip install https://github.com/letorbi/synoindexwatcher/archive/master.zip
+$ sudo python -m pip install --upgrade https://github.com/letorbi/synoindexwatcher/archive/master.zip
 ```
 
-This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/).
+This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/). You can use the same command to upgrade Synoindex Watcher from an older version.
 
 ## Usage
 

@@ -98,7 +98,7 @@ def start():
         while True:
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
-                path = os.path.join(inotify.get_path(event.wd), str.encode(event.name))
+                path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
                 if event.mask & flags.CREATE or event.mask & flags.MOVED_TO:
                     process_create(path, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:

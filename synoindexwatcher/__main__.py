@@ -24,6 +24,7 @@ import signal
 import argparse
 import logging
 import time
+import configparser
 
 import init
 from inotifyrecursive import INotify, flags
@@ -67,6 +68,8 @@ def is_allowed_path(name, parent, is_dir):
 
 def start():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--config", default=None,
+        help="use a config-file")
     parser.add_argument("--logfile", default=None,
         help="set the log-file for program messages")
     parser.add_argument("--loglevel", default="INFO",
@@ -81,6 +84,13 @@ def start():
         print(init.generate(args.pidfile, args.logfile, args.loglevel))
         exit(0)
 
+    if args.config != None:
+        config = configparser.ConfigParser()
+        config.read(args.config)
+        paths = config.sections()
+    else:
+        paths = ["/volume1/music", "/volume1/photo", "/volume1/video"]
+
     logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
         format="%(asctime)s %(levelname)s %(message)s")
 
@@ -88,11 +98,10 @@ def start():
 
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
-    inotify.add_watch_recursive(b"/volume1/music", mask, is_allowed_path)
-    inotify.add_watch_recursive(b"/volume1/photo", mask, is_allowed_path)
-    inotify.add_watch_recursive(b"/volume1/video", mask, is_allowed_path)
-
-    logging.info("Watching for media file changes...")
+    for path in paths:
+        logging.info("Watching path: %s", path)
+        inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)
+    logging.info("Waiting for media file changes...")
 
     try:
         while True:

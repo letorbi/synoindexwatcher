@@ -68,6 +68,8 @@ def is_allowed_path(name, parent, is_dir):
 
 def start():
     parser = argparse.ArgumentParser()
+    parser.add_argument('path', nargs='*',
+        help="add a path that shall be watched")
     parser.add_argument("--config", default=None,
         help="use a config-file")
     parser.add_argument("--logfile", default=None,
@@ -84,12 +86,9 @@ def start():
         print(init.generate(args.pidfile, args.logfile, args.loglevel))
         exit(0)
 
+    config = configparser.ConfigParser()
     if args.config != None:
-        config = configparser.ConfigParser()
         config.read(args.config)
-        paths = config.sections()
-    else:
-        paths = ["/volume1/music", "/volume1/photo", "/volume1/video"]
 
     logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
         format="%(asctime)s %(levelname)s %(message)s")
@@ -98,11 +97,15 @@ def start():
 
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
+    paths = args.path if len(args.path) else config.sections()
+    if not len(paths):
+        parser.print_help()
+        exit(1)
     for path in paths:
-        logging.info("Watching path: %s", path)
+        logging.info("Adding watch for path: %s", path)
         inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)
-    logging.info("Waiting for media file changes...")
 
+    logging.info("Waiting for media file changes...")
     try:
         while True:
             for event in inotify.read():

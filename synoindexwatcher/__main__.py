@@ -93,10 +93,10 @@ def start():
     parser.add_argument("--loglevel",
         default=config.get("DEFAULT", "loglevel", fallback="INFO"),
         help="set the minimum level that shall be logged")
-    parser.add_argument("--generate-config", action="store_const", const=True,
-        default=False, help="generate and print a config-file")
-    parser.add_argument("--generate-init", action="store_const", const=True,
-        default=False, help="generate and print an init-script")
+    parser.add_argument("--generate-config", action="store_true",
+        help="generate and print a config-file")
+    parser.add_argument("--generate-init", action="store_true",
+        help="generate and print an init-script")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
         help="set the pid-file used in the init-script")
     args = parser.parse_args()

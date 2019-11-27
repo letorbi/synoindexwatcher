@@ -68,7 +68,18 @@ def is_allowed_path(name, parent, is_dir):
             return False
     return True
 
+def read_config_file():
+    config = configparser.ConfigParser(allow_no_value=True)
+    arg_range = range(1, len(sys.argv) - 1)
+    for i in arg_range:
+        if sys.argv[i] == "--config":
+            config.read(sys.argv[i + 1])
+            break
+    return config
+
 def start():
+    config = read_config_file()
+
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
         help="add a path that shall be watched")
@@ -93,10 +104,6 @@ def start():
     if args.generate_config:
         print(files.generateConfig(args))
         exit(0)
-
-    config = configparser.ConfigParser(allow_no_value=True)
-    if args.config != None:
-        config.read(args.config)
 
     logfile = args.logfile if args.logfile\
         else config.get("DEFAULT", "logfile", fallback=None)

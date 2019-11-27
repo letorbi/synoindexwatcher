@@ -26,8 +26,10 @@ import logging
 import time
 import configparser
 
-import init
 from inotifyrecursive import INotify, flags
+
+import files
+import init
 
 def process_create(filepath, is_dir):
     arg = ""
@@ -76,6 +78,8 @@ def start():
         help="set the log-file for program messages")
     parser.add_argument("--loglevel", default=False,
         help="set the minimum level that shall be logged")
+    parser.add_argument("--generate-config", action="store_const", const=True,
+        default=False, help="generate and print a config-file")
     parser.add_argument("--generate-init", action="store_const", const=True,
         default=False, help="generate and print an init-script")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
@@ -84,6 +88,10 @@ def start():
 
     if args.generate_init:
         print(init.generate(args.pidfile, args.logfile, args.loglevel))
+        exit(0)
+
+    if args.generate_config:
+        print(files.generateConfig(args))
         exit(0)
 
     config = configparser.ConfigParser(allow_no_value=True)

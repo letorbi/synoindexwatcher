@@ -68,7 +68,7 @@ def is_allowed_path(name, parent, is_dir):
             return False
     return True
 
-def read_config_file():
+def read_config():
     config = configparser.ConfigParser(allow_no_value=True)
     args_length = len(sys.argv)
     args_range = range(1, args_length)
@@ -79,16 +79,14 @@ def read_config_file():
                 if i+1 < args_length:
                     split_arg += [sys.argv[i + 1]]
                 else:
-                    print("synoindexwatcher: error: argument --config: expected one argument")
-                    exit(1)
+                    # Will throw an error
+                    parse_arguments(config)
             config.read(split_arg[1])
             break
     return config
 
-def start():
-    config = read_config_file()
+def parse_arguments(config):
     sections = config.sections()
-
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
         default=sections if len(sections) else files.DEFAULT_PATHS,
@@ -107,7 +105,11 @@ def start():
         help="generate and print an init-script")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
         help="set the pid-file used in the init-script")
-    args = parser.parse_args()
+    return parser.parse_args()
+
+def start():
+    config = read_config()
+    args = parse_arguments(config)
 
     if args.generate_init:
         print(init.generate(args.pidfile, args.logfile, args.loglevel))

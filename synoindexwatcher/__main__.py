@@ -72,9 +72,9 @@ def start():
         help="add a path that shall be watched")
     parser.add_argument("--config", default=None,
         help="use a config-file")
-    parser.add_argument("--logfile", default=None,
+    parser.add_argument("--logfile", default=False,
         help="set the log-file for program messages")
-    parser.add_argument("--loglevel", default="INFO",
+    parser.add_argument("--loglevel", default=False,
         help="set the minimum level that shall be logged")
     parser.add_argument("--generate-init", action="store_const", const=True,
         default=False, help="generate and print an init-script")
@@ -86,11 +86,15 @@ def start():
         print(init.generate(args.pidfile, args.logfile, args.loglevel))
         exit(0)
 
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(allow_no_value=True)
     if args.config != None:
         config.read(args.config)
 
-    logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
+    logfile = args.logfile if args.logfile\
+        else config.get("DEFAULT", "logfile", fallback=None)
+    loglevel = args.loglevel if args.loglevel\
+        else config.get("DEFAULT", "loglevel", fallback="INFO")
+    logging.basicConfig(filename=logfile, level=loglevel.upper(),
         format="%(asctime)s %(levelname)s %(message)s")
 
     signal.signal(signal.SIGTERM, sigterm)

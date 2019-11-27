@@ -70,10 +70,18 @@ def is_allowed_path(name, parent, is_dir):
 
 def read_config_file():
     config = configparser.ConfigParser(allow_no_value=True)
-    arg_range = range(1, len(sys.argv) - 1)
-    for i in arg_range:
-        if sys.argv[i] == "--config":
-            config.read(sys.argv[i + 1])
+    args_length = len(sys.argv)
+    args_range = range(1, args_length)
+    for i in args_range:
+        split_arg = sys.argv[i].split("=")
+        if split_arg[0] == "--config":
+            if len(split_arg) == 1:
+                if i+1 < args_length:
+                    split_arg += [sys.argv[i + 1]]
+                else:
+                    print("synoindexwatcher: error: argument --config: expected one argument")
+                    exit(1)
+            config.read(split_arg[1])
             break
     return config
 

@@ -111,8 +111,7 @@ def start():
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
     paths = args.path if len(args.path) else config.sections()
     if not len(paths):
-        parser.print_help()
-        exit(1)
+        paths = files.DEFAULT_PATHS
     for path in paths:
         logging.info("Adding watch for path: %s", path)
         inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)

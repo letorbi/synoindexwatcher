@@ -79,15 +79,19 @@ def read_config_file():
 
 def start():
     config = read_config_file()
+    sections = config.sections()
 
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
+        default=sections if len(sections) else files.DEFAULT_PATHS,
         help="add a path that shall be watched")
     parser.add_argument("--config", default=None,
         help="use a config-file")
-    parser.add_argument("--logfile", default=False,
+    parser.add_argument("--logfile",
+        default=config.get("DEFAULT", "logfile", fallback=None),
         help="set the log-file for program messages")
-    parser.add_argument("--loglevel", default=False,
+    parser.add_argument("--loglevel",
+        default=config.get("DEFAULT", "loglevel", fallback="INFO"),
         help="set the minimum level that shall be logged")
     parser.add_argument("--generate-config", action="store_const", const=True,
         default=False, help="generate and print a config-file")
@@ -105,21 +109,14 @@ def start():
         print(files.generateConfig(args))
         exit(0)
 
-    logfile = args.logfile if args.logfile\
-        else config.get("DEFAULT", "logfile", fallback=None)
-    loglevel = args.loglevel if args.loglevel\
-        else config.get("DEFAULT", "loglevel", fallback="INFO")
-    logging.basicConfig(filename=logfile, level=loglevel.upper(),
+    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
         format="%(asctime)s %(levelname)s %(message)s")
 
     signal.signal(signal.SIGTERM, sigterm)
 
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
-    paths = args.path if len(args.path) else config.sections()
-    if not len(paths):
-        paths = files.DEFAULT_PATHS
-    for path in paths:
+    for path in args.path:
         logging.info("Adding watch for path: %s", path)
         inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)
 

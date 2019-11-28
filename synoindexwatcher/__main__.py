@@ -28,9 +28,9 @@ import configparser
 
 from inotifyrecursive import INotify, flags
 
-import constants
-import files
-import init
+from . import constants
+from . import files
+from . import init
 
 def process_create(filepath, is_dir):
     arg = ""

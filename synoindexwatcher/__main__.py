@@ -115,22 +115,26 @@ def parse_arguments(config):
         help="set the pid-file used in the init-script")
     return parser.parse_args()
 
+def on_sigterm(signal, frame):
+    logging.info("Process received SIGTERM signal")
+    sys.exit(0)
+
 def start():
     config = read_config()
     args = parse_arguments(config)
 
     if args.generate_init:
         print(init.generate(args.pidfile, args.logfile, args.loglevel))
-        exit(0)
+        return
 
     if args.generate_config:
         print(files.generateConfig(args))
-        exit(0)
+        return
 
     logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
         format="%(asctime)s %(levelname)s %(message)s")
 
-    signal.signal(signal.SIGTERM, sigterm)
+    signal.signal(signal.SIGTERM, on_sigterm)
 
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
@@ -152,10 +156,6 @@ def start():
                     process_modify(path, is_dir)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
-
-def sigterm(signal, frame):
-    logging.info("Process received SIGTERM signal")
-    sys.exit(0)
 
 if __name__ == "__main__":
     try:

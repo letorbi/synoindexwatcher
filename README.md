@@ -77,13 +77,13 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 ### Configuration-file
 
-The default behaviour of Synoindex Watcher can also be changed via a configuration-file instead of command-line arguments. Use the following command to generate a configuration file: 
+The default behaviour of Synoindex Watcher can also be changed via a configuration-file instead of command-line arguments. Use the following command to generate a configuration file:
 
 ```
 python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
 ```
 
-The generated file is splittet into several sections: The section `[DEFAULT]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a directory that shall be watched. The directory-sections contain no values so far.
+The generated file is splittet into several sections: The section `[GLOBAL]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a directory that shall be watched. The directory-sections contain no values so far.
 
 You have to explicitly tell Synoindex Watcher to use a configuration-file by calling it like this:
 

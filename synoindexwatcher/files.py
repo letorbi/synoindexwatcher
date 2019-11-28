@@ -21,7 +21,7 @@ DEFAULT_PATHS = ["/volume1/music", "/volume1/photo", "/volume1/video"]
 
 def generateConfig(args):
     logfile = args.logfile if args.logfile else ""
-    content = "[DEFAULT]\nlogfile=%s\nloglevel=%s" % (logfile, args.loglevel)
+    content = "[GLOBAL]\nlogfile=%s\nloglevel=%s" % (logfile, args.loglevel)
     for path in args.path:
         content += "\n\n[%s]" % path
     return content

@@ -69,7 +69,8 @@ def is_allowed_path(name, parent, is_dir):
     return True
 
 def read_config():
-    config = configparser.ConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True,
+        default_section="GLOBAL")
     args_length = len(sys.argv)
     args_range = range(1, args_length)
     for i in args_range:
@@ -94,10 +95,10 @@ def parse_arguments(config):
     parser.add_argument("--config", default=None,
         help="use a config-file")
     parser.add_argument("--logfile",
-        default=config.get("DEFAULT", "logfile", fallback=None),
+        default=config.get("GLOBAL", "logfile", fallback=None),
         help="set the log-file for program messages")
     parser.add_argument("--loglevel",
-        default=config.get("DEFAULT", "loglevel", fallback="INFO"),
+        default=config.get("GLOBAL", "loglevel", fallback="INFO"),
         help="set the minimum level that shall be logged")
     parser.add_argument("--generate-config", action="store_true",
         help="generate and print a config-file")

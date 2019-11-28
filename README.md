@@ -39,28 +39,59 @@ You can start Synoindex Watcher with the following command:
 $ python -m synoindexwatcher
 ```
 
-Add `-h` or `--help` to see the list of available parameters:
-
-```
-$ python -m synoindexwatcher --help
-```
+Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* and */volume1/video* by default.  You can change this, as well as some other things, by adding some [command-line arguments](#command-line-arguments) or using a [configuration-file](#config-file).
 
 ### Start on boot
 
-Synoindex Watcher can also be run as a daemon. Use the following commands to create an init-script that starts
-Synoindex Watcher in the background when your DiskStation boots:
+Use the following commands to create an init-script that starts Synoindex Watcher in the background when your DiskStation boots:
 
 ```
 $ python -m synoindexwatcher --generate-init | sudo tee /usr/local/etc/rc.d/S99synoindexwatcher.sh
 $ sudo chmod a+x /usr/local/etc/rc.d/S99synoindexwatcher.sh
 ```
 
-You can also use the saved init-script to stop and start the Synoindex Watcher daemon:
+You can also use the saved init-script to start and stop the Synoindex Watcher background process manually:
 
 ```
-$ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh stop
 $ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh start
+$ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh stop
 ```
+
+### Command-line arguments
+
+The default behaviour of Synoindex Watcher can be changed with various command-line arguments:
+
+* `path [path]`: By appending one or more paths to the command-line you can define which directories shall be watched by synoindexwatcher. For example `python -m synoindexwatcher /home/me/Music` will tell Synoindex Watcher to watch only the directory */home/me/Music*.
+
+* `--logfile=file`: By default everything is written to the standard output (aka the console), but for example `python -m synoindexwatcher --logfile=/var/log/synoindexwatcher.log` will tell Synoindex Watcher to write its output into the file */var/log/synoindexwatcher.log*
+
+* `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can chanage this by setting the log-level to either `DEBUG`, `INFO`, `WARN` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.
+
+* `--config=file`: Get the default-configuration from a certain file. For example `python -m synoindexwatcher --config=/etc/synoindexwatcher.conf` will tell Synoindex Watcher to use the values in */etc/synoindexwatcher.conf* as its default-values. Any additional command-line arguments will override the values read from the configuration-file.
+
+* `--generate-init`: Generate an init-script, write it to the standard output and exit afterwards. Any additional command-line arguments will be integrated into the generated script. See the [start on boot](#start-on-boot) section above for further details.
+
+* `--generate-config`: Generate a configuration-file, write it to the standard output and exit afterwards. Any additional command-line arguments will be integrated into the generated configuration. See the [configuration-file](#configuration-file) section below for further details.
+
+* `--help`: Write a short online help to the standard output and exit afterwards.
+
+### Configuration-file
+
+The default behaviour of Synoindex Watcher can also be changed via a configuration-file instead of command-line arguments. Use the following command to generate a configuration file: 
+
+```
+python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
+```
+
+The generated file is splittet into several sections: The section `[DEFAULT]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a path that shall be watched. The path-sections contain no values so far.
+
+You have to explicitly tell Synoindex Watcher to use a configuration-file by calling it like this:
+
+```
+python -m synoindexwatcher --config=/usr/local/etc/synoindexwatcher.conf
+```
+
+Keep in mind, that you can use additional command-line arguments to override the values from the configuration-file.
 
 ## FAQ
 

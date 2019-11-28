@@ -39,7 +39,7 @@ You can start Synoindex Watcher with the following command:
 $ python -m synoindexwatcher
 ```
 
-Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* and */volume1/video* by default.  You can change this, as well as some other things, by adding some [command-line arguments](#command-line-arguments) or using a [configuration-file](#config-file).
+Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* and */volume1/video* by default.  You can change this, as well as some other things, by adding some [command-line arguments](#command-line-arguments) or using a [configuration-file](#configuration-file).
 
 ### Start on boot
 
@@ -83,7 +83,7 @@ The default behaviour of Synoindex Watcher can also be changed via a configurati
 python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
 ```
 
-The generated file is splittet into several sections: The section `[DEFAULT]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a path that shall be watched. The path-sections contain no values so far.
+The generated file is splittet into several sections: The section `[DEFAULT]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a directory that shall be watched. The directory-sections contain no values so far.
 
 You have to explicitly tell Synoindex Watcher to use a configuration-file by calling it like this:
 

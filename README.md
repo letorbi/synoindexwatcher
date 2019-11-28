@@ -65,7 +65,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `--logfile=file`: By default everything is written to the standard output (aka the console), but for example `python -m synoindexwatcher --logfile=/var/log/synoindexwatcher.log` will tell Synoindex Watcher to write its output into the file */var/log/synoindexwatcher.log*
 
-* `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can chanage this by setting the log-level to either `DEBUG`, `INFO`, `WARN` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.
+* `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can chanage this by setting the log-level to either `DEBUG`, `INFO`, `WARNING` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.
 
 * `--config=file`: Get the default-configuration from a certain file. For example `python -m synoindexwatcher --config=/etc/synoindexwatcher.conf` will tell Synoindex Watcher to use the values in */etc/synoindexwatcher.conf* as its default-values. Any additional command-line arguments will override the values read from the configuration-file.
 

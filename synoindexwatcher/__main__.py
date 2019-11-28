@@ -91,19 +91,20 @@ def parse_arguments(config):
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
         default=sections if len(sections) else files.DEFAULT_PATHS,
-        help="add a path that shall be watched")
-    parser.add_argument("--config", default=None,
-        help="use a config-file")
+        help="add a directory that shall be watched")
     parser.add_argument("--logfile",
         default=config.get("GLOBAL", "logfile", fallback=None),
-        help="set the log-file for program messages")
+        help="write log-messages into the file LOGFILE (default: stdout)")
     parser.add_argument("--loglevel",
+        choices=["ERROR", "WARNING", "INFO", "DEBUG"],
         default=config.get("GLOBAL", "loglevel", fallback="INFO"),
-        help="set the minimum level that shall be logged")
+        help="log only messages as or more important than LOGLEVEL (default: INFO)")
+    parser.add_argument("--config", default=None,
+        help="read the default-configuration from the file CONFIG")
     parser.add_argument("--generate-config", action="store_true",
-        help="generate and print a config-file")
+        help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",
-        help="generate and print an init-script")
+        help="generate and show an init-script and exit")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
         help="set the pid-file used in the init-script")
     return parser.parse_args()

@@ -24,9 +24,13 @@ import signal
 import argparse
 import logging
 import time
+import configparser
 
-import init
 from inotifyrecursive import INotify, flags
+
+import constants
+import files
+import init
 
 def process_create(filepath, is_dir):
     arg = ""
@@ -61,39 +65,84 @@ def is_allowed_path(name, parent, is_dir):
     # Don't check the extension for directories
     if not is_dir:
         ext = os.path.splitext(name)[1][1:].lower()
-        if ext in excluded_exts:
+        if ext in constants.EXCLUDED_EXTS:
             return False
     return True
 
-def start():
+def read_config():
+    config = configparser.ConfigParser(allow_no_value=True,
+        default_section="GLOBAL")
+    args_length = len(sys.argv)
+    args_range = range(1, args_length)
+    for i in args_range:
+        split_arg = sys.argv[i].split("=")
+        if split_arg[0] == "--config":
+            if len(split_arg) == 1:
+                if i+1 < args_length:
+                    split_arg += [sys.argv[i + 1]]
+                else:
+                    # Will throw an error
+                    parse_arguments(config)
+            config.read(split_arg[1])
+            break
+    loglevel = config.get("GLOBAL", "loglevel", fallback=None)
+    if loglevel and not loglevel in constants.ALLOWED_LOGLEVELS:
+        print("synoindexwatcher: error: option loglevel: invalid choice: '%s' (choose from '%s')"
+            % (loglevel, "', '".join(constants.ALLOWED_LOGLEVELS)))
+        sys.exit(1)
+    return config
+
+def parse_arguments(config):
+    sections = config.sections()
     parser = argparse.ArgumentParser()
-    parser.add_argument("--logfile", default=None,
-        help="set the log-file for program messages")
-    parser.add_argument("--loglevel", default="INFO",
-        help="set the minimum level that shall be logged")
-    parser.add_argument("--generate-init", action="store_const", const=True,
-        default=False, help="generate and print an init-script")
+    parser.add_argument('path', nargs='*',
+        default=sections if len(sections) else constants.DEFAULT_PATHS,
+        help="add a directory that shall be watched")
+    parser.add_argument("--logfile",
+        default=config.get("GLOBAL", "logfile", fallback=None),
+        help="write log-messages into the file LOGFILE (default: stdout)")
+    parser.add_argument("--loglevel",
+        choices=constants.ALLOWED_LOGLEVELS,
+        default=config.get("GLOBAL", "loglevel", fallback="INFO"),
+        help="log only messages as or more important than LOGLEVEL (default: INFO)")
+    parser.add_argument("--config", default=None,
+        help="read the default-configuration from the file CONFIG")
+    parser.add_argument("--generate-config", action="store_true",
+        help="generate and show a configuration-file and exit")
+    parser.add_argument("--generate-init", action="store_true",
+        help="generate and show an init-script and exit")
     parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
         help="set the pid-file used in the init-script")
-    args = parser.parse_args()
+    return parser.parse_args()
+
+def on_sigterm(signal, frame):
+    logging.info("Process received SIGTERM signal")
+    sys.exit(0)
+
+def start():
+    config = read_config()
+    args = parse_arguments(config)
 
     if args.generate_init:
         print(init.generate(args.pidfile, args.logfile, args.loglevel))
-        exit(0)
+        return
 
-    logging.basicConfig(filename=args.logfile, level=getattr(logging, args.loglevel.upper()),
+    if args.generate_config:
+        print(files.generateConfig(args))
+        return
+
+    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
         format="%(asctime)s %(levelname)s %(message)s")
 
-    signal.signal(signal.SIGTERM, sigterm)
+    signal.signal(signal.SIGTERM, on_sigterm)
 
     inotify = INotify()
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
-    inotify.add_watch_recursive(b"/volume1/music", mask, is_allowed_path)
-    inotify.add_watch_recursive(b"/volume1/photo", mask, is_allowed_path)
-    inotify.add_watch_recursive(b"/volume1/video", mask, is_allowed_path)
+    for path in args.path:
+        logging.info("Adding watch for path: %s", path)
+        inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)
 
-    logging.info("Watching for media file changes...")
-
+    logging.info("Waiting for media file changes...")
     try:
         while True:
             for event in inotify.read():
@@ -107,14 +156,6 @@ def start():
                     process_modify(path, is_dir)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
-
-def sigterm(signal, frame):
-    logging.info("Process received SIGTERM signal")
-    sys.exit(0)
-
-# TODO The original script only allowed certain extensions.
-#      Maybe we should have a whilelist and a blacklist.
-excluded_exts = ["tmp"]
 
 if __name__ == "__main__":
     try:

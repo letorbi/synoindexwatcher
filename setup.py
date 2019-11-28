@@ -5,18 +5,11 @@ import setuptools
 
 install_requires = ["inotifyrecursive>=0.2.2"]
 
-# Optionally add dependencies for packages that are not part of the Python
-# standard library in older versions.
-
-try:
-    import argparse
-except ImportError:
-    install_requires += ["argpase"]
-
-try:
-    import configparser
-except ImportError:
+if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 5):
     install_requires += ["configparser"]
+
+if sys.version_info.major < 3 and sys.version_info.minor < 2:
+    install_requires += ["argpase"]
 
 # Use readme-file as long description
 

@@ -1,6 +1,25 @@
 
 import setuptools
 
+# Define package dependencies for all Python versions
+
+install_requires = ["inotifyrecursive>=0.2.2"]
+
+# Optionally add dependencies for packages that are not part of the Python
+# standard library in older versions.
+
+try:
+    import argparse
+except ImportError:
+    install_requires += ["argpase"]
+
+try:
+    import configparser
+except ImportError:
+    install_requires += ["configparser"]
+
+# Use readme-file as long description
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
@@ -23,7 +42,5 @@ setuptools.setup(
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
     ],
-    install_requires=[
-        "inotifyrecursive>=0.2.2"
-    ],
+    install_requires=install_requires,
 )

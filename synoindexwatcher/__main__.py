@@ -31,6 +31,8 @@ from inotifyrecursive import INotify, flags
 import files
 import init
 
+ALLOWED_LOGLEVELS = ["ERROR", "WARNING", "INFO", "DEBUG"]
+
 def process_create(filepath, is_dir):
     arg = ""
     if is_dir:
@@ -84,6 +86,11 @@ def read_config():
                     parse_arguments(config)
             config.read(split_arg[1])
             break
+    loglevel = config.get("GLOBAL", "loglevel", fallback=None)
+    if loglevel and not loglevel in ALLOWED_LOGLEVELS:
+        print("synoindexwatcher: error: option loglevel: invalid choice: '%s' (choose from '%s')"
+            % (loglevel, "', '".join(ALLOWED_LOGLEVELS)))
+        sys.exit(1)
     return config
 
 def parse_arguments(config):
@@ -96,7 +103,7 @@ def parse_arguments(config):
         default=config.get("GLOBAL", "logfile", fallback=None),
         help="write log-messages into the file LOGFILE (default: stdout)")
     parser.add_argument("--loglevel",
-        choices=["ERROR", "WARNING", "INFO", "DEBUG"],
+        choices=ALLOWED_LOGLEVELS,
         default=config.get("GLOBAL", "loglevel", fallback="INFO"),
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
     parser.add_argument("--config", default=None,

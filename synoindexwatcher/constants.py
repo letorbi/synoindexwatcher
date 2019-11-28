@@ -17,9 +17,10 @@
 #
 ################################################################################
 
-def generateConfig(args):
-    logfile = args.logfile if args.logfile else ""
-    content = "[GLOBAL]\nlogfile=%s\nloglevel=%s" % (logfile, args.loglevel)
-    for path in args.path:
-        content += "\n\n[%s]" % path
-    return content
+ALLOWED_LOGLEVELS = ["ERROR", "WARNING", "INFO", "DEBUG"]
+
+DEFAULT_PATHS = ["/volume1/music", "/volume1/photo", "/volume1/video"]
+
+# TODO The original script only allowed certain extensions.
+#      Maybe we should have a whilelist and a blacklist.
+EXCLUDED_EXTS = ["tmp"]

@@ -28,10 +28,9 @@ import configparser
 
 from inotifyrecursive import INotify, flags
 
+import constants
 import files
 import init
-
-ALLOWED_LOGLEVELS = ["ERROR", "WARNING", "INFO", "DEBUG"]
 
 def process_create(filepath, is_dir):
     arg = ""
@@ -66,7 +65,7 @@ def is_allowed_path(name, parent, is_dir):
     # Don't check the extension for directories
     if not is_dir:
         ext = os.path.splitext(name)[1][1:].lower()
-        if ext in excluded_exts:
+        if ext in constants.EXCLUDED_EXTS:
             return False
     return True
 
@@ -87,9 +86,9 @@ def read_config():
             config.read(split_arg[1])
             break
     loglevel = config.get("GLOBAL", "loglevel", fallback=None)
-    if loglevel and not loglevel in ALLOWED_LOGLEVELS:
+    if loglevel and not loglevel in constants.ALLOWED_LOGLEVELS:
         print("synoindexwatcher: error: option loglevel: invalid choice: '%s' (choose from '%s')"
-            % (loglevel, "', '".join(ALLOWED_LOGLEVELS)))
+            % (loglevel, "', '".join(constants.ALLOWED_LOGLEVELS)))
         sys.exit(1)
     return config
 
@@ -97,13 +96,13 @@ def parse_arguments(config):
     sections = config.sections()
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
-        default=sections if len(sections) else files.DEFAULT_PATHS,
+        default=sections if len(sections) else constants.DEFAULT_PATHS,
         help="add a directory that shall be watched")
     parser.add_argument("--logfile",
         default=config.get("GLOBAL", "logfile", fallback=None),
         help="write log-messages into the file LOGFILE (default: stdout)")
     parser.add_argument("--loglevel",
-        choices=ALLOWED_LOGLEVELS,
+        choices=constants.ALLOWED_LOGLEVELS,
         default=config.get("GLOBAL", "loglevel", fallback="INFO"),
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
     parser.add_argument("--config", default=None,
@@ -157,10 +156,6 @@ def start():
 def sigterm(signal, frame):
     logging.info("Process received SIGTERM signal")
     sys.exit(0)
-
-# TODO The original script only allowed certain extensions.
-#      Maybe we should have a whilelist and a blacklist.
-excluded_exts = ["tmp"]
 
 if __name__ == "__main__":
     try:

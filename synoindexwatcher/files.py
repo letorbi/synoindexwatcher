@@ -38,20 +38,33 @@ PIDFILE="/var/run/synoindexwatcher.pid"
 case "$1" in
     start|"")
         mkdir -p `dirname "$PIDFILE"`
-        # Set LC_ALL to ensure that the filesystem encoding is correctly
-        # detected during boot.
-        nohup env LC_ALL=en_US.utf8 python -m synoindexwatcher $ARGS > /dev/null 2>&1 &
-        echo $! > "$PIDFILE"
+        if [ ! -f "$PIDFILE" ]; then
+            echo "Starting synoindexwatcher..."
+            # Set LC_ALL to ensure that the filesystem encoding is correctly
+            # detected during boot.
+            nohup env LC_ALL=en_US.utf8 python -m synoindexwatcher $ARGS > /dev/null 2>&1 &
+            echo $! > "$PIDFILE"
+        else
+            echo "Error: synoindexwatcher has already been started"
+            exit 1
+        fi
         ;;
     restart|reload|force-reload)
         echo "Error: argument '$1' not supported" >&2
         exit 3
         ;;
     stop)
-        kill `cat "$PIDFILE"`
+        if [ -f "$PIDFILE" ]; then
+            echo "Stopping synoindexwatcher..."
+            kill `cat "$PIDFILE"`
+            rm "$PIDFILE"
+        else
+            echo "Error: synoindexwatcher has not been started yet"
+            exit 1
+        fi
         ;;
     *)
-        echo "Usage: synoindexwatcher.sh [start|stop]" >&2
+        echo "Usage: `basename $0` [start|stop]" >&2
         exit 3
         ;;
 esac""" % args

@@ -145,7 +145,6 @@ def start():
                 is_dir = event.mask & flags.ISDIR
                 path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
                 if event.mask & flags.CREATE and event.mask & flags.MODIFY:
-                    print("create: " % path)
                     if is_dir:
                         add_to_index(path, is_dir)
                     else:

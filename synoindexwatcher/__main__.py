@@ -30,7 +30,6 @@ from inotifyrecursive import INotify, flags
 
 from . import constants
 from . import files
-from . import init
 
 def add_to_index(filepath, is_dir):
     arg = ""
@@ -90,13 +89,14 @@ def read_config():
     return config
 
 def parse_arguments(config):
+    logfile = None if sys.stdout.isatty() else "/var/log/synoindexwatcher.log"
     sections = config.sections()
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
         default=sections if len(sections) else constants.DEFAULT_PATHS,
         help="add a directory that shall be watched")
     parser.add_argument("--logfile",
-        default=config.get("GLOBAL", "logfile", fallback=None),
+        default=config.get("GLOBAL", "logfile", fallback=logfile),
         help="write log-messages into the file LOGFILE (default: stdout)")
     parser.add_argument("--loglevel",
         choices=constants.ALLOWED_LOGLEVELS,
@@ -108,8 +108,6 @@ def parse_arguments(config):
         help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",
         help="generate and show an init-script and exit")
-    parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
-        help="set the pid-file used in the init-script")
     return parser.parse_args()
 
 def on_sigterm(signal, frame):
@@ -121,7 +119,7 @@ def start():
     args = parse_arguments(config)
 
     if args.generate_init:
-        print(init.generate(args.pidfile, args.logfile, args.loglevel))
+        print(files.generateInit(sys.argv))
         return
 
     if args.generate_config:

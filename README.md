@@ -63,7 +63,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `path [path]`: By appending one or more paths to the command-line you can define which directories shall be watched by synoindexwatcher. For example `python -m synoindexwatcher /home/me/Music` will tell Synoindex Watcher to watch only the directory */home/me/Music*.
 
-* `--logfile=file`: By default everything is written to the standard output (aka the console), but for example `python -m synoindexwatcher --logfile=/var/log/synoindexwatcher.log` will tell Synoindex Watcher to write its output into the file */var/log/synoindexwatcher.log*
+* `--logfile=file`: Write log-messages to the specified file. For example `python -m synoindexwatcher --logfile=/home/me/watcher.log` will tell Synoindex Watcher to write into the file */home/me/watcher.log*. By default Synoindex Watcher will write to the terminal, if it is attached to one, or to */var/log/synoindexwatcher.log* otherwise.
 
 * `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can chanage this by setting the log-level to either `DEBUG`, `INFO`, `WARNING` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.
 
@@ -83,7 +83,7 @@ The default behaviour of Synoindex Watcher can also be changed via a configurati
 python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
 ```
 
-The generated file is splittet into several sections: The section `[GLOBAL]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a directory that shall be watched. The directory-sections contain no values so far.
+The generated file is split into several sections: The section `[GLOBAL]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a directory that shall be watched. The directory-sections contain no values so far.
 
 You have to explicitly tell Synoindex Watcher to use a configuration-file by calling it like this:
 

@@ -30,7 +30,6 @@ from inotifyrecursive import INotify, flags
 
 from . import constants
 from . import files
-from . import init
 
 def add_to_index(filepath, is_dir):
     arg = ""
@@ -121,7 +120,7 @@ def start():
     args = parse_arguments(config)
 
     if args.generate_init:
-        print(init.generate(args.pidfile, args.logfile, args.loglevel))
+        print(files.generateInit(args))
         return
 
     if args.generate_config:

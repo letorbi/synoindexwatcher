@@ -107,8 +107,6 @@ def parse_arguments(config):
         help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",
         help="generate and show an init-script and exit")
-    parser.add_argument("--pidfile", default="/var/run/synoindexwatcher.pid",
-        help="set the pid-file used in the init-script")
     return parser.parse_args()
 
 def on_sigterm(signal, frame):

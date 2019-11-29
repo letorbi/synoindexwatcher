@@ -137,23 +137,30 @@ def start():
     signal.signal(signal.SIGTERM, on_sigterm)
 
     inotify = INotify()
-    mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY
+    mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY | flags.CLOSE_WRITE
     for path in args.path:
         logging.info("Adding watch for path: %s", path)
         inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)
 
     logging.info("Waiting for media file changes...")
     try:
+        modified_files = set()
         while True:
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
                 path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
-                if event.mask & flags.CREATE or event.mask & flags.MOVED_TO:
+                if event.mask & flags.CREATE and event.mask & flags.MODIFY:
+                    if is_dir:
+                        process_create(path, is_dir)
+                    else:
+                        modified_files.add(path)
+                elif event.mask & flags.MOVED_TO:
                     process_create(path, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
                     process_delete(path, is_dir)
-                elif event.mask & flags.MODIFY:
-                    process_modify(path, is_dir)
+                elif event.mask & flags.CLOSE_WRITE and path in modified_files:
+                    modified_files.remove(path)
+                    process_create(path, is_dir)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
 

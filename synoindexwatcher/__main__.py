@@ -17,8 +17,6 @@
 #
 ################################################################################
 
-from __future__ import print_function
-
 import sys
 import os
 import subprocess
@@ -91,13 +89,14 @@ def read_config():
     return config
 
 def parse_arguments(config):
+    logfile = None if sys.stdout.isatty() else "/var/log/synoindexwatcher.log"
     sections = config.sections()
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
         default=sections if len(sections) else constants.DEFAULT_PATHS,
         help="add a directory that shall be watched")
     parser.add_argument("--logfile",
-        default=config.get("GLOBAL", "logfile", fallback=None),
+        default=config.get("GLOBAL", "logfile", fallback=logfile),
         help="write log-messages into the file LOGFILE (default: stdout)")
     parser.add_argument("--loglevel",
         choices=constants.ALLOWED_LOGLEVELS,
@@ -121,8 +120,6 @@ def start():
 
     if args.generate_init:
         print(files.generateInit(sys.argv))
-        if not args.logfile:
-            print("synoindexwatcher: warning: no logfile specified, any output will be lost", file=sys.stderr)
         return
 
     if args.generate_config:

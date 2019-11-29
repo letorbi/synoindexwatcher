@@ -36,7 +36,6 @@ ARGS="%s"
 PIDFILE="/var/run/synoindexwatcher.pid"
 
 start_synoindexwatcher() {
-    mkdir -p `dirname "$PIDFILE"`
     if [ ! -f "$PIDFILE" ]; then
         echo "Starting synoindexwatcher..."
         # Set LC_ALL to ensure that the filesystem encoding is correctly

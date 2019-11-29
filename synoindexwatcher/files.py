@@ -35,33 +35,41 @@ def generateInit(argv):
 ARGS="%s"
 PIDFILE="/var/run/synoindexwatcher.pid"
 
+start_synoindexwatcher() {
+    mkdir -p `dirname "$PIDFILE"`
+    if [ ! -f "$PIDFILE" ]; then
+        echo "Starting synoindexwatcher..."
+        # Set LC_ALL to ensure that the filesystem encoding is correctly
+        # detected during boot.
+        nohup env LC_ALL=en_US.utf8 python -m synoindexwatcher $ARGS > /dev/null 2>&1 &
+        echo $! > "$PIDFILE"
+    else
+        echo "Error: synoindexwatcher has already been started"
+        exit 1
+    fi
+}
+
+stop_synoindexwatcher() {
+    if [ -f "$PIDFILE" ]; then
+        echo "Stopping synoindexwatcher..."
+        kill `cat "$PIDFILE"`
+        rm "$PIDFILE"
+    else
+        echo "Error: synoindexwatcher has not been started yet"
+        exit 1
+    fi
+}
+
 case "$1" in
     start|"")
-        mkdir -p `dirname "$PIDFILE"`
-        if [ ! -f "$PIDFILE" ]; then
-            echo "Starting synoindexwatcher..."
-            # Set LC_ALL to ensure that the filesystem encoding is correctly
-            # detected during boot.
-            nohup env LC_ALL=en_US.utf8 python -m synoindexwatcher $ARGS > /dev/null 2>&1 &
-            echo $! > "$PIDFILE"
-        else
-            echo "Error: synoindexwatcher has already been started"
-            exit 1
-        fi
+        start_synoindexwatcher
         ;;
     restart|reload|force-reload)
-        echo "Error: argument '$1' not supported" >&2
-        exit 3
+        stop_synoindexwatcher
+        start_synoindexwatcher
         ;;
     stop)
-        if [ -f "$PIDFILE" ]; then
-            echo "Stopping synoindexwatcher..."
-            kill `cat "$PIDFILE"`
-            rm "$PIDFILE"
-        else
-            echo "Error: synoindexwatcher has not been started yet"
-            exit 1
-        fi
+        stop_synoindexwatcher
         ;;
     *)
         echo "Usage: `basename $0` [start|stop]" >&2

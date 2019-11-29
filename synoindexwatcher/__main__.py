@@ -32,7 +32,7 @@ from . import constants
 from . import files
 from . import init
 
-def process_create(filepath, is_dir):
+def add_to_index(filepath, is_dir):
     arg = ""
     if is_dir:
         arg = "-A"
@@ -40,7 +40,7 @@ def process_create(filepath, is_dir):
         arg = "-a"
     do_index_command(filepath, is_dir, arg)
 
-def process_delete(filepath, is_dir):
+def remove_from_index(filepath, is_dir):
     arg = ""
     if is_dir:
         arg = "-D"
@@ -48,12 +48,9 @@ def process_delete(filepath, is_dir):
         arg = "-d"
     do_index_command(filepath, is_dir, arg)
 
-def process_modify(filepath, is_dir):
-    do_index_command(filepath, is_dir, "-a")
-
 def do_index_command(filepath, is_dir, index_argument):
     logging.info("synoindex %s %s" % (index_argument, filepath))
-    subprocess.call(["synoindex", index_argument, filepath])
+    # subprocess.call(["synoindex", index_argument, filepath])
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
@@ -151,16 +148,16 @@ def start():
                 path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
                 if event.mask & flags.CREATE and event.mask & flags.MODIFY:
                     if is_dir:
-                        process_create(path, is_dir)
+                        add_to_index(path, is_dir)
                     else:
                         modified_files.add(path)
                 elif event.mask & flags.MOVED_TO:
-                    process_create(path, is_dir)
+                    add_to_index(path, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
-                    process_delete(path, is_dir)
+                    remove_from_index(path, is_dir)
                 elif event.mask & flags.CLOSE_WRITE and path in modified_files:
                     modified_files.remove(path)
-                    process_create(path, is_dir)
+                    add_to_index(path, is_dir)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
 

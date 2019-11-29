@@ -39,23 +39,7 @@ You can start Synoindex Watcher with the following command:
 $ python -m synoindexwatcher
 ```
 
-Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* and */volume1/video* by default.  You can change this, as well as some other things, by adding some [command-line arguments](#command-line-arguments) or using a [configuration-file](#configuration-file).
-
-### Start on boot
-
-Use the following commands to create an init-script that starts Synoindex Watcher in the background when your DiskStation boots:
-
-```
-$ python -m synoindexwatcher --generate-init | sudo tee /usr/local/etc/rc.d/S99synoindexwatcher.sh
-$ sudo chmod a+x /usr/local/etc/rc.d/S99synoindexwatcher.sh
-```
-
-You can also use the saved init-script to start and stop the Synoindex Watcher background process manually:
-
-```
-$ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh start
-$ sudo /usr/local/etc/rc.d/S99synoindexwatcher.sh stop
-```
+Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* and */volume1/video* by default.  You can change this, as well as some other things, by adding some [command-line arguments](#command-line-arguments) or using a [configuration-file](#configuration-file). You can also use an init-script to [start Synoindex Watcher on boot](#start-on-boot).
 
 ### Command-line arguments
 
@@ -65,7 +49,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `--logfile=file`: Write log-messages to the specified file. For example `python -m synoindexwatcher --logfile=/home/me/watcher.log` will tell Synoindex Watcher to write into the file */home/me/watcher.log*. By default Synoindex Watcher will write to the terminal, if it is attached to one, or to */var/log/synoindexwatcher.log* otherwise.
 
-* `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can chanage this by setting the log-level to either `DEBUG`, `INFO`, `WARNING` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.
+* `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can change this by setting the log-level to either `DEBUG`, `INFO`, `WARNING` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.
 
 * `--config=file`: Get the default-configuration from a certain file. For example `python -m synoindexwatcher --config=/etc/synoindexwatcher.conf` will tell Synoindex Watcher to use the values in */etc/synoindexwatcher.conf* as its default-values. Any additional command-line arguments will override the values read from the configuration-file.
 
@@ -77,7 +61,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 ### Configuration-file
 
-The default behaviour of Synoindex Watcher can also be changed via a configuration-file instead of command-line arguments. Use the following command to generate a configuration file:
+The default behaviour of Synoindex Watcher can also be changed via a configuration-file instead of command-line arguments. Use the following command to create a configuration file:
 
 ```
 python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
@@ -92,6 +76,29 @@ python -m synoindexwatcher --config=/usr/local/etc/synoindexwatcher.conf
 ```
 
 Keep in mind, that you can use additional command-line arguments to override the values from the configuration-file.
+
+### Start on boot
+
+Use the following commands to create an init-script that starts Synoindex Watcher in the background when your DiskStation boots:
+
+```
+$ python -m synoindexwatcher --generate-init | sudo tee /usr/local/etc/rc.d/S99synoindexwatcher.sh
+$ sudo chmod a+x /usr/local/etc/rc.d/S99synoindexwatcher.sh
+```
+
+Please note that any messages are written into the file */var/log/synoindexwatcher.log*, if Synoindex Watcher is running as a background process. You can use the `--logfile` parameter to write the output to another file.
+
+Also other command-line arguments will be integrated into the init-script. The following line will generate an init-script that tells Synoindex Watcher to watch only the directory */home/me/Music* and to log messages to */home/me/watcher.log*:
+
+```
+$ python -m synoindexwatcher --generate-init --logfile=/home/me/watcher.log /home/me/Music
+```
+
+It is recommended to use a configuration file along with the init script, because it allows you to change the behaviour of Synoindex Watcher without the need to regenerate the init-script after every change. Assuming you have created a configuration-file with the commands in the previous section, you can use the following line to generate an init-script that recognizes this file:
+
+```
+$ python -m synoindexwatcher --generate-init --config=/usr/local/etc/synoindexwatcher.conf
+```
 
 ## FAQ
 

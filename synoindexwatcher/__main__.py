@@ -50,7 +50,7 @@ def remove_from_index(filepath, is_dir):
 
 def do_index_command(filepath, is_dir, index_argument):
     logging.info("synoindex %s %s" % (index_argument, filepath))
-    # subprocess.call(["synoindex", index_argument, filepath])
+    subprocess.call(["synoindex", index_argument, filepath])
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
@@ -146,7 +146,7 @@ def start():
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
                 path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
-                if event.mask & flags.CREATE and event.mask & flags.MODIFY:
+                if event.mask & flags.CREATE or event.mask & flags.MODIFY:
                     if is_dir:
                         add_to_index(path, is_dir)
                     else:
@@ -155,7 +155,7 @@ def start():
                     add_to_index(path, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
                     remove_from_index(path, is_dir)
-                elif event.mask & flags.CLOSE_WRITE and path in modified_files:
+                elif event.mask & flags.CLOSE_WRITE and (path in modified_files):
                     modified_files.remove(path)
                     add_to_index(path, is_dir)
     except KeyboardInterrupt:

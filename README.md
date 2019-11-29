@@ -46,7 +46,7 @@ Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* 
 Use the following commands to create an init-script that starts Synoindex Watcher in the background when your DiskStation boots:
 
 ```
-$ python -m synoindexwatcher --generate-init | sudo tee /usr/local/etc/rc.d/S99synoindexwatcher.sh
+$ sudo sh -c "python -m synoindexwatcher --generate-init > /usr/local/etc/rc.d/S99synoindexwatcher.sh"
 $ sudo chmod a+x /usr/local/etc/rc.d/S99synoindexwatcher.sh
 ```
 

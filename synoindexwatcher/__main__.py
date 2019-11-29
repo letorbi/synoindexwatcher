@@ -17,6 +17,8 @@
 #
 ################################################################################
 
+from __future__ import print_function
+
 import sys
 import os
 import subprocess
@@ -49,7 +51,7 @@ def remove_from_index(filepath, is_dir):
 
 def do_index_command(filepath, is_dir, index_argument):
     logging.info("synoindex %s %s" % (index_argument, filepath))
-    # subprocess.call(["synoindex", index_argument, filepath])
+    subprocess.call(["synoindex", index_argument, filepath])
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
@@ -118,7 +120,9 @@ def start():
     args = parse_arguments(config)
 
     if args.generate_init:
-        print(files.generateInit(args))
+        print(files.generateInit(sys.argv))
+        if not args.logfile:
+            print("synoindexwatcher: warning: no logfile specified, any output will be lost", file=sys.stderr)
         return
 
     if args.generate_config:
@@ -144,6 +148,7 @@ def start():
                 is_dir = event.mask & flags.ISDIR
                 path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
                 if event.mask & flags.CREATE and event.mask & flags.MODIFY:
+                    print("create: " % path)
                     if is_dir:
                         add_to_index(path, is_dir)
                     else:

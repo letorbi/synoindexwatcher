@@ -50,14 +50,11 @@ def clear_index():
     if os.path.exists("/var/spool/syno_indexing_queue") or os.path.exists("/var/spool/syno_indexing_queue.tmp"):
         logging.error("Indexing in progress, aborting rebuild")
         exit(3)
-    logging.info("Stopping indexing service (synoindexd)...")
     call_command(["sudo", "synoservice", "--hard-stop", "synoindexd"])
-    logging.info("Clearing media-index database...")
     query = "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'" 
     tables = call_command(["psql", "mediaserver", "-tAc", query])
     query = "TRUNCATE %s RESTART IDENTITY" % tables
     call_command(["psql", "mediaserver", "-c", query])
-    logging.info("Starting indexing service (synoindexd)...")
     call_command(["sudo", "synoservice", "--start", "synoindexd"])
 
 def add_to_index_recursive(fullpath):
@@ -159,10 +156,16 @@ def start():
         return
 
     if args.rebuild_index:
-        clear_index()
-        logging.info("Adding media-files to index...")
-        for path in args.path:
-            add_to_index_recursive(path)
+        print("The current media-index will be irrecoverably destroyed!")
+        confirmation = input("Enter 'yes' to continue or anything else to cancel: ")
+        if confirmation == "yes":
+            print("Clearing media-index database...")
+            clear_index()
+            print("Adding files to media-index (this may take some time)...")
+            for path in args.path:
+                add_to_index_recursive(path)
+        else:
+            print("Cancelled.")
         return
 
     signal.signal(signal.SIGTERM, on_sigterm)

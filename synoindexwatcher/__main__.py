@@ -42,19 +42,23 @@ def __add_to_index_recursive(path, name):
         for entry in os.listdir(fullpath):
             __add_to_index_recursive(fullpath, entry)
 
+def call_command(args):
+    logging.debug("Calling '%s'" % " ".join(args))
+    return subprocess.check_output(args, stderr=subprocess.STDOUT)
+
 def clear_index():
     if os.path.exists("/var/spool/syno_indexing_queue") or os.path.exists("/var/spool/syno_indexing_queue.tmp"):
         logging.error("Indexing in progress, aborting rebuild")
         exit(3)
     logging.info("Stopping indexing service (synoindexd)...")
-    subprocess.check_call(["sudo", "synoservice", "--hard-stop", "synoindexd"])
+    call_command(["sudo", "synoservice", "--hard-stop", "synoindexd"])
     logging.info("Clearing media-index database...")
     query = "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'" 
-    tables = subprocess.check_output(["psql", "mediaserver", "-tAc", query])
+    tables = call_command(["psql", "mediaserver", "-tAc", query])
     query = "TRUNCATE %s RESTART IDENTITY" % tables
-    subprocess.check_call(["psql", "mediaserver", "-c", query])
+    call_command(["psql", "mediaserver", "-c", query])
     logging.info("Starting indexing service (synoindexd)...")
-    subprocess.check_call(["sudo", "synoservice", "--start", "synoindexd"])
+    call_command(["sudo", "synoservice", "--start", "synoindexd"])
 
 def add_to_index_recursive(path):
     (tip, tail) = os.path.split(path)
@@ -66,7 +70,7 @@ def add_to_index(filepath, is_dir):
         arg = "-A"
     else:
         arg = "-a"
-    do_index_command(filepath, is_dir, arg)
+    call_command(["synoindex", arg, filepath])
 
 def remove_from_index(filepath, is_dir):
     arg = ""
@@ -74,11 +78,7 @@ def remove_from_index(filepath, is_dir):
         arg = "-D"
     else:
         arg = "-d"
-    do_index_command(filepath, is_dir, arg)
-
-def do_index_command(filepath, is_dir, index_argument):
-    logging.info("synoindex %s %s" % (index_argument, filepath))
-    subprocess.call(["synoindex", index_argument, filepath])
+    call_command(["synoindex", arg, filepath])
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders

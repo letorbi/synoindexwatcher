@@ -60,25 +60,23 @@ def clear_index():
     logging.info("Starting indexing service (synoindexd)...")
     call_command(["sudo", "synoservice", "--start", "synoindexd"])
 
-def add_to_index_recursive(path):
-    (tip, tail) = os.path.split(path)
-    __add_to_index_recursive(tail, tip)
+def add_to_index_recursive(fullpath):
+    (path, name) = os.path.split(fullpath)
+    __add_to_index_recursive(path, name)
 
-def add_to_index(filepath, is_dir):
-    arg = ""
+def add_to_index(fullpath, is_dir):
     if is_dir:
         arg = "-A"
     else:
         arg = "-a"
-    call_command(["synoindex", arg, filepath])
+    call_command(["synoindex", arg, fullpath])
 
-def remove_from_index(filepath, is_dir):
-    arg = ""
+def remove_from_index(fullpath, is_dir):
     if is_dir:
         arg = "-D"
     else:
         arg = "-d"
-    call_command(["synoindex", arg, filepath])
+    call_command(["synoindex", arg, fullpath])
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
@@ -181,19 +179,19 @@ def start():
         while True:
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
-                path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
+                fullpath = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
                 if event.mask & flags.CREATE or event.mask & flags.MODIFY:
                     if is_dir:
-                        add_to_index(path, is_dir)
+                        add_to_index(fullpath, is_dir)
                     else:
-                        modified_files.add(path)
+                        modified_files.add(fullpath)
                 elif event.mask & flags.MOVED_TO:
-                    add_to_index(path, is_dir)
+                    add_to_index(fullpath, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
-                    remove_from_index(path, is_dir)
-                elif event.mask & flags.CLOSE_WRITE and (path in modified_files):
-                    modified_files.remove(path)
-                    add_to_index(path, is_dir)
+                    remove_from_index(fullpath, is_dir)
+                elif event.mask & flags.CLOSE_WRITE and (fullpath in modified_files):
+                    modified_files.remove(fullpath)
+                    add_to_index(fullpath, is_dir)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
 

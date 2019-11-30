@@ -31,6 +31,35 @@ from inotifyrecursive import INotify, flags
 from . import constants
 from . import files
 
+def __add_to_index_recursive(path, name):
+    fullpath = os.path.join(path, name)
+    is_dir = os.path.isdir(fullpath) 
+    if not is_allowed_path(name, -1, is_dir):
+        logging.debug("Skipping path %s" % fullpath)
+        return
+    add_to_index(fullpath, is_dir)
+    if is_dir:
+        for entry in os.listdir(fullpath):
+            __add_to_index_recursive(fullpath, entry)
+
+def clear_index():
+    if os.path.exists("/var/spool/syno_indexing_queue") or os.path.exists("/var/spool/syno_indexing_queue.tmp"):
+        logging.error("Indexing in progress, aborting rebuild")
+        exit(3)
+    logging.info("Stopping indexing service (synoindexd)...")
+    subprocess.check_call(["sudo", "synoservice", "--hard-stop", "synoindexd"])
+    logging.info("Clearing media-index database...")
+    query = "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'" 
+    tables = subprocess.check_output(["psql", "mediaserver", "-tAc", query])
+    query = "TRUNCATE %s RESTART IDENTITY" % tables
+    subprocess.check_call(["psql", "mediaserver", "-c", query])
+    logging.info("Starting indexing service (synoindexd)...")
+    subprocess.check_call(["sudo", "synoservice", "--start", "synoindexd"])
+
+def add_to_index_recursive(path):
+    (tip, tail) = os.path.split(path)
+    __add_to_index_recursive(tail, tip)
+
 def add_to_index(filepath, is_dir):
     arg = ""
     if is_dir:
@@ -104,6 +133,8 @@ def parse_arguments(config):
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")
+    parser.add_argument("--rebuild-index", action="store_true",
+        help="build a new media-index based on content of watched paths and exit")
     parser.add_argument("--generate-config", action="store_true",
         help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",
@@ -118,6 +149,9 @@ def start():
     config = read_config()
     args = parse_arguments(config)
 
+    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
+        format="%(asctime)s %(levelname)s %(message)s")
+
     if args.generate_init:
         print(files.generateInit(sys.argv))
         return
@@ -126,8 +160,12 @@ def start():
         print(files.generateConfig(args))
         return
 
-    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
-        format="%(asctime)s %(levelname)s %(message)s")
+    if args.rebuild_index:
+        clear_index()
+        logging.info("Adding media-files to index...")
+        for path in args.path:
+            add_to_index_recursive(path)
+        return
 
     signal.signal(signal.SIGTERM, on_sigterm)
 

@@ -31,25 +31,49 @@ from inotifyrecursive import INotify, flags
 from . import constants
 from . import files
 
-def add_to_index(filepath, is_dir):
-    arg = ""
+def __add_to_index_recursive(path, name):
+    fullpath = os.path.join(path, name)
+    is_dir = os.path.isdir(fullpath) 
+    if not is_allowed_path(name, -1, is_dir):
+        logging.debug("Skipping path %s" % fullpath)
+        return
+    add_to_index(fullpath, is_dir)
+    if is_dir:
+        for entry in os.listdir(fullpath):
+            __add_to_index_recursive(fullpath, entry)
+
+def call_command(args):
+    logging.debug("Calling '%s'" % " ".join(args))
+    return subprocess.check_output(args, stderr=subprocess.STDOUT)
+
+def clear_index():
+    if os.path.exists("/var/spool/syno_indexing_queue") or os.path.exists("/var/spool/syno_indexing_queue.tmp"):
+        logging.error("Indexing in progress, aborting rebuild")
+        exit(3)
+    call_command(["sudo", "synoservice", "--hard-stop", "synoindexd"])
+    query = "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'" 
+    tables = call_command(["psql", "mediaserver", "-tAc", query])
+    query = "TRUNCATE %s RESTART IDENTITY" % tables
+    call_command(["psql", "mediaserver", "-c", query])
+    call_command(["sudo", "synoservice", "--start", "synoindexd"])
+
+def add_to_index_recursive(fullpath):
+    (path, name) = os.path.split(fullpath)
+    __add_to_index_recursive(path, name)
+
+def add_to_index(fullpath, is_dir):
     if is_dir:
         arg = "-A"
     else:
         arg = "-a"
-    do_index_command(filepath, is_dir, arg)
+    call_command(["synoindex", arg, fullpath])
 
-def remove_from_index(filepath, is_dir):
-    arg = ""
+def remove_from_index(fullpath, is_dir):
     if is_dir:
         arg = "-D"
     else:
         arg = "-d"
-    do_index_command(filepath, is_dir, arg)
-
-def do_index_command(filepath, is_dir, index_argument):
-    logging.info("synoindex %s %s" % (index_argument, filepath))
-    subprocess.call(["synoindex", index_argument, filepath])
+    call_command(["synoindex", arg, fullpath])
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
@@ -104,6 +128,8 @@ def parse_arguments(config):
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")
+    parser.add_argument("--rebuild-index", action="store_true",
+        help="build a new media-index based on content of watched paths and exit")
     parser.add_argument("--generate-config", action="store_true",
         help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",
@@ -118,6 +144,9 @@ def start():
     config = read_config()
     args = parse_arguments(config)
 
+    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
+        format="%(asctime)s %(levelname)s %(message)s")
+
     if args.generate_init:
         print(files.generateInit(sys.argv))
         return
@@ -126,8 +155,18 @@ def start():
         print(files.generateConfig(args))
         return
 
-    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
-        format="%(asctime)s %(levelname)s %(message)s")
+    if args.rebuild_index:
+        print("The current media-index will be irrecoverably destroyed!")
+        confirmation = input("Enter 'yes' to continue or anything else to cancel: ")
+        if confirmation == "yes":
+            print("Clearing media-index database...")
+            clear_index()
+            print("Adding files to media-index (this may take some time)...")
+            for path in args.path:
+                add_to_index_recursive(path)
+        else:
+            print("Cancelled.")
+        return
 
     signal.signal(signal.SIGTERM, on_sigterm)
 
@@ -143,19 +182,19 @@ def start():
         while True:
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
-                path = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
+                fullpath = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
                 if event.mask & flags.CREATE or event.mask & flags.MODIFY:
                     if is_dir:
-                        add_to_index(path, is_dir)
+                        add_to_index(fullpath, is_dir)
                     else:
-                        modified_files.add(path)
+                        modified_files.add(fullpath)
                 elif event.mask & flags.MOVED_TO:
-                    add_to_index(path, is_dir)
+                    add_to_index(fullpath, is_dir)
                 elif event.mask & flags.DELETE or event.mask & flags.MOVED_FROM:
-                    remove_from_index(path, is_dir)
-                elif event.mask & flags.CLOSE_WRITE and (path in modified_files):
-                    modified_files.remove(path)
-                    add_to_index(path, is_dir)
+                    remove_from_index(fullpath, is_dir)
+                elif event.mask & flags.CLOSE_WRITE and (fullpath in modified_files):
+                    modified_files.remove(fullpath)
+                    add_to_index(fullpath, is_dir)
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
 

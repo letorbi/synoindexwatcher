@@ -48,6 +48,8 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `--config=file`: Get the default-configuration from a certain file. For example `python -m synoindexwatcher --config=/etc/synoindexwatcher.conf` will tell Synoindex Watcher to use the values in */etc/synoindexwatcher.conf* as its default-values. Any additional command-line arguments will override the values read from the configuration-file.
 
+* `--rebuild-index`: Empty the media-index database, add all allowed files and directories in the watched directories and exit afterwards. Be careful with this argument as it destroys your current index and might take a long time to complete. Use it if your media-index contains deleted files or lacks existing files.
+
 * `--generate-init`: Generate an init-script, write it to the standard output and exit afterwards. Any additional command-line arguments will be integrated into the generated script. See the [start on boot](#start-on-boot) section above for further details.
 
 * `--generate-config`: Generate a configuration-file, write it to the standard output and exit afterwards. Any additional command-line arguments will be integrated into the generated configuration. See the [configuration-file](#configuration-file) section below for further details.

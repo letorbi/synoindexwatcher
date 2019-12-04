@@ -3,7 +3,7 @@ import setuptools
 
 # Define package dependencies for all Python versions
 
-install_requires = ["inotifyrecursive>=0.2.2"]
+install_requires = ["inotifyrecursive>=0.2.3"]
 
 if sys.version_info.major < 3 or (sys.version_info.major == 3 and sys.version_info.minor < 5):
     install_requires += ["configparser"]
@@ -18,7 +18,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="synoindexwatcher",
-    version="0.8.0",
+    version="0.8.1",
     author="Torben Haase",
     author_email="torben@pixelsvsbytes.com",
     description="An automated media-index updater for Synology DiskStations based on inotify and synoindex.",

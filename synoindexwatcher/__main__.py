@@ -77,10 +77,10 @@ def remove_from_index(fullpath, is_dir):
 
 def is_allowed_path(name, parent, is_dir):
     # Don't watch hidden files and folders
-    if name[:1] == b'.':
+    if name[:1] == '.':
         return False
     # Don't watch special files and folders
-    if name[:1] == b'@':
+    if name[:1] == '@':
         return False
     # Don't check the extension for directories
     if not is_dir:
@@ -174,7 +174,7 @@ def start():
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY | flags.CLOSE_WRITE
     for path in args.path:
         logging.info("Adding watch for path: %s", path)
-        inotify.add_watch_recursive(path.encode('utf-8'), mask, is_allowed_path)
+        inotify.add_watch_recursive(path, mask, is_allowed_path)
 
     logging.info("Waiting for media file changes...")
     try:
@@ -182,7 +182,7 @@ def start():
         while True:
             for event in inotify.read():
                 is_dir = event.mask & flags.ISDIR
-                fullpath = os.path.join(inotify.get_path(event.wd).decode('utf-8'), event.name)
+                fullpath = os.path.join(inotify.get_path(event.wd), event.name)
                 if event.mask & flags.CREATE or event.mask & flags.MODIFY:
                     if is_dir:
                         add_to_index(fullpath, is_dir)

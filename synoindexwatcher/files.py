@@ -18,8 +18,14 @@
 ################################################################################
 
 def generateConfig(args):
+    blacklist = args.blacklist if args.blacklist else ""
+    whitelist = args.whitelist if args.whitelist else ""
     logfile = args.logfile if args.logfile else ""
-    content = "[GLOBAL]\nlogfile=%s\nloglevel=%s" % (logfile, args.loglevel)
+    content = """[GLOBAL]
+blacklist=%s
+whitelist=%s
+logfile=%s
+loglevel=%s""" % (blacklist, whitelist, logfile, args.loglevel)
     for path in args.path:
         content += "\n\n[%s]" % path
     return content

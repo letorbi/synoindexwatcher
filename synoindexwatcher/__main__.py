@@ -130,10 +130,10 @@ def parse_arguments(config):
         default=config.get("GLOBAL", "loglevel", fallback="INFO"),
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
     parser.add_argument("--blacklist",
-        default=constants.DEFAULT_BLACKLIST,
+        default=config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST),
         help="define a global blacklist for filenames")
     parser.add_argument("--whitelist",
-        default=constants.DEFAULT_WHITELIST,
+        default=config.get("GLOBAL", "whitelist", fallback=constants.DEFAULT_WHITELIST),
         help="define a global whitelist for filenames")
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")

@@ -153,9 +153,6 @@ def start():
     config = read_config()
     args = parse_arguments(config)
 
-    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
-        format="%(asctime)s %(levelname)s %(message)s")
-
     if args.generate_init:
         print(files.generateInit(sys.argv))
         return
@@ -163,6 +160,9 @@ def start():
     if args.generate_config:
         print(files.generateConfig(args))
         return
+
+    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
+        format="%(asctime)s %(levelname)s %(message)s")
 
     if args.rebuild_index:
         print("The current media-index will be irrecoverably destroyed!")

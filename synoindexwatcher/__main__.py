@@ -106,7 +106,7 @@ def read_config():
                 else:
                     # Will throw an error
                     parse_arguments(config)
-            config.read(split_arg[1])
+            config.read(os.path.expanduser(split_arg[1]))
             break
     loglevel = config.get("GLOBAL", "loglevel", fallback=None)
     if loglevel and not loglevel in constants.ALLOWED_LOGLEVELS:

@@ -42,6 +42,10 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `path [path]`: By appending one or more paths to the command-line you can define which directories shall be watched by synoindexwatcher. For example `python -m synoindexwatcher /home/me/Music` will tell Synoindex Watcher to watch only the directory */home/me/Music*.
 
+* `--blacklist=regex`: Define a regular-expression for a global blacklist. For example `python -m synoindexwatcher --blacklist="foo|bar"` will tell Synoindex Watcher ignore files and directories with `foo` or `bar` in their name. The default regular-expression is `^\.|^\@|\.tmp$`, which means that files and directories are ignored if they start with `.` or `@` or end with `.tmp`. 
+
+* `--whitelist=regex`: Define a regular-expression for a global whitelist. For example `python -m synoindexwatcher --whitelist="foo|bar"` will tell Synoindex Watcher to watch only files and directories with `foo` or `bar` in their name. The default regular-expression is empty, which means that all files and directories, which are not blacklisted, are added to the media-index. Blacklisted files will always be ignored.
+
 * `--logfile=file`: Write log-messages to the specified file. For example `python -m synoindexwatcher --logfile=/home/me/watcher.log` will tell Synoindex Watcher to write into the file */home/me/watcher.log*. By default Synoindex Watcher will write to the terminal, if it is attached to one, or to */var/log/synoindexwatcher.log* otherwise.
 
 * `--loglevel=value`: Synoindex Watcher logs errors, warnings and informational messages by default. You can change this by setting the log-level to either `DEBUG`, `INFO`, `WARNING` or `ERROR`. For example `python -m synoindexwatcher --loglevel=DEBUG` will also log (a lot of) debugging messages along with errors, warnings and infos.

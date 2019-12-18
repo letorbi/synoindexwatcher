@@ -26,7 +26,10 @@ def generateConfig(args):
 
 def generateInit(argv):
     args = argv[1:]
+    args.remove("--rebuild-index")
     args.remove("--generate-init")
+    args.remove("--generate-config")
+    args.remove("--help")
     args = " ".join(args)
     return """#!/bin/sh
 

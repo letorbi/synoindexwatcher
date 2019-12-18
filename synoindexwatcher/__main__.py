@@ -179,15 +179,15 @@ def start():
 
     signal.signal(signal.SIGTERM, on_sigterm)
 
-    inotify = INotify()
-    filter = build_filter(args)
-    mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY | flags.CLOSE_WRITE
-    for path in args.path:
-        logging.info("Adding watch for path: %s", path)
-        inotify.add_watch_recursive(path, mask, filter)
-
-    logging.info("Waiting for media file changes...")
     try:
+        inotify = INotify()
+        filter = build_filter(args)
+        mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY | flags.CLOSE_WRITE
+        for path in args.path:
+            logging.info("Adding watch for path: %s", path)
+            inotify.add_watch_recursive(path, mask, filter)
+
+        logging.info("Waiting for media file changes...")
         modified_files = set()
         while True:
             for event in inotify.read():
@@ -205,6 +205,11 @@ def start():
                 elif event.mask & flags.CLOSE_WRITE and (fullpath in modified_files):
                     modified_files.remove(fullpath)
                     add_to_index(fullpath, is_dir)
+    except OSError as e:
+        if e.errno == 28:
+            logging.error("No inode watchers left (see https://github.com/letorbi/synoindexwatcher#faq)")
+            exit(127)
+        raise
     except KeyboardInterrupt:
         logging.info("Watching interrupted by user (CTRL+C)")
 

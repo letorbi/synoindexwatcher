@@ -25,6 +25,7 @@ import argparse
 import logging
 import time
 import configparser
+import re
 
 from inotifyrecursive import INotify, flags
 
@@ -41,6 +42,11 @@ def __add_to_index_recursive(path, name):
     if is_dir:
         for entry in os.listdir(fullpath):
             __add_to_index_recursive(fullpath, entry)
+
+def __compile_byte_regex(pattern):
+    if not isinstance(pattern, bytes):
+        pattern = pattern.encode("utf8")
+    return re.compile(pattern)
 
 def call_command(args):
     logging.debug("Calling '%s'" % " ".join(args))
@@ -75,19 +81,16 @@ def remove_from_index(fullpath, is_dir):
         arg = "-d"
     call_command(["synoindex", arg, fullpath])
 
-def is_allowed_path(name, parent, is_dir):
-    # Don't watch hidden files and folders
-    if name[:1] == '.':
-        return False
-    # Don't watch special files and folders
-    if name[:1] == '@':
-        return False
-    # Don't check the extension for directories
-    if not is_dir:
-        ext = os.path.splitext(name)[1][1:].lower()
-        if ext in constants.EXCLUDED_EXTS:
+def build_filter(args):
+    blacklist = __compile_byte_regex(args.blacklist) if args.blacklist != None else None;
+    whitelist = __compile_byte_regex(args.whitelist) if args.whitelist != None else None;
+    def filter(name, parent, is_dir):
+        if blacklist != None and blacklist.search(name) != None:
             return False
-    return True
+        if whitelist != None and whitelist.search(name) == None:
+            return False
+        return True
+    return filter
 
 def read_config():
     config = configparser.ConfigParser(allow_no_value=True,
@@ -103,7 +106,7 @@ def read_config():
                 else:
                     # Will throw an error
                     parse_arguments(config)
-            config.read(split_arg[1])
+            config.read(os.path.expanduser(split_arg[1]))
             break
     loglevel = config.get("GLOBAL", "loglevel", fallback=None)
     if loglevel and not loglevel in constants.ALLOWED_LOGLEVELS:
@@ -126,6 +129,12 @@ def parse_arguments(config):
         choices=constants.ALLOWED_LOGLEVELS,
         default=config.get("GLOBAL", "loglevel", fallback="INFO"),
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
+    parser.add_argument("--blacklist",
+        default=config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST),
+        help="define a global blacklist for filenames")
+    parser.add_argument("--whitelist",
+        default=config.get("GLOBAL", "whitelist", fallback=constants.DEFAULT_WHITELIST),
+        help="define a global whitelist for filenames")
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")
     parser.add_argument("--rebuild-index", action="store_true",
@@ -144,9 +153,6 @@ def start():
     config = read_config()
     args = parse_arguments(config)
 
-    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
-        format="%(asctime)s %(levelname)s %(message)s")
-
     if args.generate_init:
         print(files.generateInit(sys.argv))
         return
@@ -154,6 +160,9 @@ def start():
     if args.generate_config:
         print(files.generateConfig(args))
         return
+
+    logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
+        format="%(asctime)s %(levelname)s %(message)s")
 
     if args.rebuild_index:
         print("The current media-index will be irrecoverably destroyed!")
@@ -171,10 +180,11 @@ def start():
     signal.signal(signal.SIGTERM, on_sigterm)
 
     inotify = INotify()
+    filter = build_filter(args)
     mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY | flags.CLOSE_WRITE
     for path in args.path:
         logging.info("Adding watch for path: %s", path)
-        inotify.add_watch_recursive(path, mask, is_allowed_path)
+        inotify.add_watch_recursive(path, mask, filter)
 
     logging.info("Waiting for media file changes...")
     try:

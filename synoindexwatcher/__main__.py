@@ -122,6 +122,12 @@ def parse_arguments(config):
     parser.add_argument('path', nargs='*',
         default=sections if len(sections) else constants.DEFAULT_PATHS,
         help="add a directory that shall be watched")
+    parser.add_argument("--blacklist",
+        default=config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST),
+        help="define regular-expression for a global blacklist")
+    parser.add_argument("--whitelist",
+        default=config.get("GLOBAL", "whitelist", fallback=constants.DEFAULT_WHITELIST),
+        help="define regular-expression for a global whitelist")
     parser.add_argument("--logfile",
         default=config.get("GLOBAL", "logfile", fallback=logfile),
         help="write log-messages into the file LOGFILE (default: stdout)")
@@ -129,12 +135,6 @@ def parse_arguments(config):
         choices=constants.ALLOWED_LOGLEVELS,
         default=config.get("GLOBAL", "loglevel", fallback="INFO"),
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
-    parser.add_argument("--blacklist",
-        default=config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST),
-        help="define a global blacklist for filenames")
-    parser.add_argument("--whitelist",
-        default=config.get("GLOBAL", "whitelist", fallback=constants.DEFAULT_WHITELIST),
-        help="define a global whitelist for filenames")
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")
     parser.add_argument("--rebuild-index", action="store_true",

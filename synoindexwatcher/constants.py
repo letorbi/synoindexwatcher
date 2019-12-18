@@ -24,3 +24,6 @@ DEFAULT_PATHS = ["/volume1/music", "/volume1/photo", "/volume1/video"]
 # TODO The original script only allowed certain extensions.
 #      Maybe we should have a whilelist and a blacklist.
 EXCLUDED_EXTS = ["tmp"]
+
+DEFAULT_BLACKLIST = "^\.|^\@|\.tmp$"
+DEFAULT_WHITELIST = None

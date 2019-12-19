@@ -18,7 +18,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="synoindexwatcher",
-    version="0.9.0",
+    version="0.9.1",
     author="Torben Haase",
     author_email="torben@pixelsvsbytes.com",
     description="An automated media-index updater for Synology DiskStations based on inotify and synoindex.",

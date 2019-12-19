@@ -2,7 +2,9 @@
 
 Synoindex Watcher is a media index updater for Synology DiskStations based on inotify and synoindex. It watches the media-folders of your DiskStation an updates the media index every time a file or directory inside the media-folders is created, deleted or changed. It is written in Python and licensed as open-source under the GPL version 3.
 
-The original version was written by Mark Houghton, who [published it in his "codesourcery" blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-automatically-indexing-new-files/).
+The original version was written by Mark Houghton, who [published it in his "codesourcery" blog](https://codesourcery.wordpress.com/2012/11/29/more-on-the-synology-nas-automatically-indexing-new-files/). However, most of the original code has been replaced or rewritten by now.
+
+*This Python package is currently in beta-stage. All planned features are implemented, it is working and used on a number of devices. The only thing that's missing are some automated testing-routines, so there could still be undiscovered bugs.*
 
 ## Features
 
@@ -21,7 +23,7 @@ $ wget https://bootstrap.pypa.io/get-pip.py -qO - | sudo python
 Now you can install the synoindexwatcher module:
 
 ```
-$ sudo python -m pip install --upgrade https://github.com/letorbi/synoindexwatcher/archive/master.zip
+$ sudo python -m pip install --upgrade synoindexwatcher
 ```
 
 This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/). You can use the same command to upgrade Synoindex Watcher from an older version.

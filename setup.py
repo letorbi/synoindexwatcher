@@ -1,5 +1,6 @@
 
 import setuptools
+import sys
 
 # Define package dependencies for all Python versions
 
@@ -18,7 +19,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="synoindexwatcher",
-    version="0.9.1",
+    version="0.9.2",
     author="Torben Haase",
     author_email="torben@pixelsvsbytes.com",
     description="An automated media-index updater for Synology DiskStations based on inotify and synoindex.",

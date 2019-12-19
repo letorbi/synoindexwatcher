@@ -85,9 +85,9 @@ def build_filter(args):
     blacklist = __compile_byte_regex(args.blacklist) if args.blacklist != None else None;
     whitelist = __compile_byte_regex(args.whitelist) if args.whitelist != None else None;
     def filter(name, parent, is_dir):
-        if blacklist != None and blacklist.search(name) != None:
-            return False
         if whitelist != None and whitelist.search(name) == None:
+            return False
+        if blacklist != None and blacklist.search(name) != None:
             return False
         return True
     return filter

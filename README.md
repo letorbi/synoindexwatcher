@@ -42,9 +42,9 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `path [path]`: By appending one or more paths to the command-line you can define which directories shall be watched by synoindexwatcher. For example `python -m synoindexwatcher /home/me/Music` will tell Synoindex Watcher to watch only the directory */home/me/Music*.
 
-* `--blacklist=regex`: Define a regular-expression for a global blacklist. For example `python -m synoindexwatcher --blacklist="foo|bar"` will tell Synoindex Watcher ignore files and directories with `foo` or `bar` in their name. The default regular-expression is `^\.|^\@|\.tmp$`, which means that files and directories are ignored if they start with `.` or `@` or end with `.tmp`. 
+* `--blacklist=regex`: Define a regular-expression for a global blacklist. For example `python -m synoindexwatcher --blacklist="foo|bar"` will tell Synoindex Watcher ignore files and directories with `foo` or `bar` in their name. The default regular-expression is `^\.|^\@|\.tmp$`, which means that files and directories are ignored if they start with `.` or `@` or end with `.tmp`. The blacklist is applied after the whitelist.
 
-* `--whitelist=regex`: Define a regular-expression for a global whitelist. For example `python -m synoindexwatcher --whitelist="foo|bar"` will tell Synoindex Watcher to watch only files and directories with `foo` or `bar` in their name. The default regular-expression is empty, which means that all files and directories, which are not blacklisted, are added to the media-index. Blacklisted files will always be ignored.
+* `--whitelist=regex`: Define a regular-expression for a global whitelist. For example `python -m synoindexwatcher --whitelist="foo|bar"` will tell Synoindex Watcher to watch only files and directories with `foo` or `bar` in their name. The default regular-expression is empty, which means that all files and directories, which are not blacklisted, are added to the media-index. The whitelist is applied before the blacklist.
 
 * `--logfile=file`: Write log-messages to the specified file. For example `python -m synoindexwatcher --logfile=/home/me/watcher.log` will tell Synoindex Watcher to write into the file */home/me/watcher.log*. By default Synoindex Watcher will write to the terminal, if it is attached to one, or to */var/log/synoindexwatcher.log* otherwise.
 

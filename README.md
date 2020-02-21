@@ -20,13 +20,15 @@ Synoindex Watcher cannot be installed via Synology's Package Center. You have to
 $ wget https://bootstrap.pypa.io/get-pip.py -qO - | sudo python
 ```
 
-Now you can install the synoindexwatcher module:
+Now you can install the Synoindex Watcher module:
 
 ```
 $ sudo python -m pip install --upgrade synoindexwatcher
 ```
 
-This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/). You can use the same command to upgrade Synoindex Watcher from an older version.
+You can use the same command to upgrade Synoindex Watcher from an older version.
+
+This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/) and also [configparser](https://pypi.org/project/configparser/), if you use Python <= 3.5.
 
 ## Usage
 

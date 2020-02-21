@@ -32,6 +32,16 @@ from inotifyrecursive import INotify, flags
 from . import constants
 from . import files
 
+if sys.version_info.major < 3:
+    def __fix_encoding(s):
+        if isinstance(s, unicode):
+            return s.encode("UTF-8")
+        else:
+            return s
+else:
+    def __fix_encoding(s):
+        return s
+
 def __add_to_index_recursive(path, name):
     fullpath = os.path.join(path, name)
     is_dir = os.path.isdir(fullpath) 
@@ -42,11 +52,6 @@ def __add_to_index_recursive(path, name):
     if is_dir:
         for entry in os.listdir(fullpath):
             __add_to_index_recursive(fullpath, entry)
-
-def __compile_byte_regex(pattern):
-    if not isinstance(pattern, bytes):
-        pattern = pattern.encode("utf8")
-    return re.compile(pattern)
 
 def call_command(args):
     logging.debug("Calling '%s'" % " ".join(args))
@@ -82,8 +87,8 @@ def remove_from_index(fullpath, is_dir):
     call_command(["synoindex", arg, fullpath])
 
 def build_filter(args):
-    blacklist = __compile_byte_regex(args.blacklist) if args.blacklist != None else None;
-    whitelist = __compile_byte_regex(args.whitelist) if args.whitelist != None else None;
+    blacklist = re.compile(args.blacklist) if args.blacklist != None else None;
+    whitelist = re.compile(args.whitelist) if args.whitelist != None else None;
     def filter(name, parent, is_dir):
         if whitelist != None and whitelist.search(name) == None:
             return False
@@ -108,6 +113,7 @@ def read_config():
                     parse_arguments(config)
             config.read(os.path.expanduser(split_arg[1]))
             break
+
     loglevel = config.get("GLOBAL", "loglevel", fallback=None)
     if loglevel and not loglevel in constants.ALLOWED_LOGLEVELS:
         print("synoindexwatcher: error: option loglevel: invalid choice: '%s' (choose from '%s')"
@@ -117,23 +123,23 @@ def read_config():
 
 def parse_arguments(config):
     logfile = None if sys.stdout.isatty() else "/var/log/synoindexwatcher.log"
-    sections = config.sections()
+    sections = [__fix_encoding(s) for s in config.sections()]
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
         default=sections if len(sections) else constants.DEFAULT_PATHS,
         help="add a directory that shall be watched")
     parser.add_argument("--blacklist",
-        default=config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST),
+        default=__fix_encoding(config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST)),
         help="define regular-expression for a global blacklist")
     parser.add_argument("--whitelist",
-        default=config.get("GLOBAL", "whitelist", fallback=constants.DEFAULT_WHITELIST),
+        default=__fix_encoding(config.get("GLOBAL", "whitelist", fallback=constants.DEFAULT_WHITELIST)),
         help="define regular-expression for a global whitelist")
     parser.add_argument("--logfile",
-        default=config.get("GLOBAL", "logfile", fallback=logfile),
+        default=__fix_encoding(config.get("GLOBAL", "logfile", fallback=logfile)),
         help="write log-messages into the file LOGFILE (default: stdout)")
     parser.add_argument("--loglevel",
         choices=constants.ALLOWED_LOGLEVELS,
-        default=config.get("GLOBAL", "loglevel", fallback="INFO"),
+        default=__fix_encoding(config.get("GLOBAL", "loglevel", fallback="INFO")),
         help="log only messages as or more important than LOGLEVEL (default: INFO)")
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")

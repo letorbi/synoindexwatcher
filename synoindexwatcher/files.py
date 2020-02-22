@@ -32,10 +32,14 @@ loglevel=%s""" % (blacklist, whitelist, logfile, args.loglevel)
 
 def generateInit(argv):
     args = argv[1:]
-    args.remove("--rebuild-index")
-    args.remove("--generate-init")
-    args.remove("--generate-config")
-    args.remove("--help")
+    try: args.remove("--rebuild-index")
+    except ValueError: pass
+    try: args.remove("--generate-init")
+    except ValueError: pass
+    try: args.remove("--generate-config")
+    except ValueError: pass
+    try: args.remove("--help")
+    except ValueError: pass
     args = " ".join(args)
     return """#!/bin/sh
 

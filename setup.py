@@ -25,7 +25,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
     ],
     install_requires=[
-        "inotifyrecursive",
+        "inotifyrecursive>=0.3.1",
         "configparser; python_version < '3.5'"
     ],
     python_requires=">=2.7, !=3.0.*, !=3.1.*"

@@ -17,6 +17,8 @@
 #
 ################################################################################
 
+import sys
+
 def generateConfig(args):
     blacklist = args.blacklist if args.blacklist else ""
     whitelist = args.whitelist if args.whitelist else ""
@@ -53,7 +55,7 @@ start_synoindexwatcher() {
         echo "Starting synoindexwatcher..."
         # Set LC_ALL to ensure that the filesystem encoding is correctly
         # detected during boot.
-        nohup env LC_ALL=en_US.utf8 python -m synoindexwatcher $ARGS > /dev/null 2>&1 &
+        nohup env LC_ALL=en_US.utf8 %s -m synoindexwatcher $ARGS > /dev/null 2>&1 &
         echo $! > "$PIDFILE"
     else
         echo "Error: synoindexwatcher has already been started"
@@ -87,4 +89,4 @@ case "$1" in
         echo "Usage: `basename $0` [start|stop]" >&2
         exit 3
         ;;
-esac""" % args
+esac""" % (args, sys.executable)

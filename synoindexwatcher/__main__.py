@@ -28,6 +28,7 @@ import configparser
 import re
 
 from inotifyrecursive import INotify, flags
+from builtins import input
 
 from . import constants
 from . import files

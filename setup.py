@@ -26,6 +26,7 @@ setuptools.setup(
     ],
     install_requires=[
         "inotifyrecursive>=0.3.3",
+        "future",
         "configparser; python_version < '3.5'"
     ],
     python_requires=">=2.7, !=3.0.*, !=3.1.*"

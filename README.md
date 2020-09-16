@@ -124,12 +124,14 @@ $ sudo synoservice --hard-stop synoindexd
 $ psql mediaserver -tAc "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'"
 $ psql mediaserver -c  "TRUNCATE `psql mediaserver -tAc "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'"` RESTART IDENTITY"
 $ sudo synoservice --start synoindexd"
+
 ```
 Afterwards you can use Synoindex Watcher to repopulate the media-index:
 
 ```
-$ synoindexwatcher --rebuild-index
+$ python -m synoindexwatcher --rebuild-index
 ```
+
 Make sure to add additional arguments like `--config` or the paths you want to watch.
 
 ----

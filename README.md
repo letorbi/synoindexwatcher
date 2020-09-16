@@ -56,7 +56,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `--config=file`: Get the default-configuration from a certain file. For example `python -m synoindexwatcher --config=/etc/synoindexwatcher.conf` will tell Synoindex Watcher to use the values in */etc/synoindexwatcher.conf* as its default-values. Any additional command-line arguments will override the values read from the configuration-file.
 
-* `--rebuild-index`: Empty the media-index database, add all allowed files and directories in the watched directories and exit afterwards. Be careful with this argument as it destroys your current index and might take a long time to complete. Use it if your media-index contains deleted files or lacks existing files.
+* `--rebuild-index`: Add all allowed files and directories in the watched directories and exit afterwards. Use it, if your media-index lacks entries for existing files. Read the [related FAQ-entry](#the-media-index-contains-entries-for-files-that-do-not-exist), if you want to remove non-existing files from the media-index.
 
 * `--generate-init`: Generate an init-script, write it to the standard output and exit afterwards. Any additional command-line arguments will be integrated into the generated script. See the [start on boot](#start-on-boot) section above for further details.
 
@@ -117,7 +117,7 @@ For a permanent solution it is recommended to add the line `fs.inotify.max_user_
 
 ### The media-index contains entries for files that do not exist
 
-To get rid of old files in the media-index, you might have to clear the whole media-index in the database and repopulate it afterwards. Since this requires to modify the database directly with SQL-commands, it is *strongly recommended* to crate a backup before executing the following commands to clear the media-index:
+To get rid of entries for non-existing files in the media-index, you have to clear the whole media-index and repopulate it afterwards. Since this requires to modify the database directly with SQL-commands, *it is strongly recommended to create a backup* before executing the following commands that clear the media-index tables:
 
 ```
 $ sudo synoservice --hard-stop synoindexd

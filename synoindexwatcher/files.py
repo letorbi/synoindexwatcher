@@ -2,7 +2,7 @@
 #  This file is part of Synoindex Watcher.
 #
 #  Copyright (c) 2012-2018 Mark Houghton <https://codesourcery.wordpress.com>
-#  Copyright (c) 2019 Torben Haase <https://pixelsvsbytes.com>
+#  Copyright (c) 2019-2020 Torben Haase <https://pixelsvsbytes.com>
 #
 #  Synoindex Watcher is free software: you can redistribute it and/or modify it
 #  under the terms of the GNU General Public License as published by the Free

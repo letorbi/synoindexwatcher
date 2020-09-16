@@ -136,4 +136,4 @@ Make sure to add additional arguments like `--config` or the paths you want to w
 
 ----
 
-Copyright 2019 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>
+Copyright (c) 2019-2020 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>

@@ -133,7 +133,7 @@ def parse_arguments(config):
     parser.add_argument("--config", default=None,
         help="read the default-configuration from the file CONFIG")
     parser.add_argument("--rebuild-index", action="store_true",
-        help="build a new media-index based on content of watched paths and exit")
+        help="add all allowed files and directories to the index and exit")
     parser.add_argument("--generate-config", action="store_true",
         help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",

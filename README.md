@@ -56,7 +56,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 
 * `--config=file`: Get the default-configuration from a certain file. For example `python -m synoindexwatcher --config=/etc/synoindexwatcher.conf` will tell Synoindex Watcher to use the values in */etc/synoindexwatcher.conf* as its default-values. Any additional command-line arguments will override the values read from the configuration-file.
 
-* `--rebuild-index`: Empty the media-index database, add all allowed files and directories in the watched directories and exit afterwards. Be careful with this argument as it destroys your current index and might take a long time to complete. Use it if your media-index contains deleted files or lacks existing files.
+* `--rebuild-index`: Add all allowed files and directories in the watched directories and exit afterwards. Use it, if your media-index lacks entries for existing files. Read the [related FAQ-entry](#the-media-index-contains-entries-for-files-that-do-not-exist), if you want to remove non-existing files from the media-index.
 
 * `--generate-init`: Generate an init-script, write it to the standard output and exit afterwards. Any additional command-line arguments will be integrated into the generated script. See the [start on boot](#start-on-boot) section above for further details.
 
@@ -114,6 +114,25 @@ This actually does not mean that you run out of disk space, but rather that your
 To fix this temporarily you could simply type `echo 204800 > /proc/sys/fs/inotify/max_user_watches` as root. The maximum number of inode-watchers in the user-space would be 204800 afterwards, which should be enough for most use-cases.  Unfortunately this fixes the problem only until the next reboot.
 
 For a permanent solution it is recommended to add the line `fs.inotify.max_user_watches = 204800` to the file */etc/sysctl.conf*. This should set the maximum value during boot, but I had to add an init-script that executes `sysctl -p /etc/sysctl.conf` to make it work. The simplest way would be to add the command to the start-section of the init-script for Synonindex Watcher.
+
+### The media-index contains entries for files that do not exist
+
+To get rid of entries for non-existing files in the media-index, you have to clear the whole media-index and repopulate it afterwards. Since this requires to modify the database directly with SQL-commands, *it is strongly recommended to create a backup* before executing the following commands that clear the media-index tables:
+
+```
+$ sudo synoservice --hard-stop synoindexd
+$ psql mediaserver -tAc "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'"
+$ psql mediaserver -c  "TRUNCATE `psql mediaserver -tAc "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'"` RESTART IDENTITY"
+$ sudo synoservice --start synoindexd"
+
+```
+Afterwards you can use Synoindex Watcher to repopulate the media-index:
+
+```
+$ python -m synoindexwatcher --rebuild-index
+```
+
+Make sure to add additional arguments like `--config` or the paths you want to watch.
 
 ----
 

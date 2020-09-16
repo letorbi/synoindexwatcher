@@ -115,6 +115,23 @@ To fix this temporarily you could simply type `echo 204800 > /proc/sys/fs/inotif
 
 For a permanent solution it is recommended to add the line `fs.inotify.max_user_watches = 204800` to the file */etc/sysctl.conf*. This should set the maximum value during boot, but I had to add an init-script that executes `sysctl -p /etc/sysctl.conf` to make it work. The simplest way would be to add the command to the start-section of the init-script for Synonindex Watcher.
 
+### The media-index contains entries for files that do not exist
+
+To get rid of old files in the media-index, you might have to clear the whole media-index in the database and repopulate it afterwards. Since this requires to modify the database directly with SQL-commands, it is *strongly recommended* to crate a backup before executing the following commands to clear the media-index:
+
+```
+$ sudo synoservice --hard-stop synoindexd
+$ psql mediaserver -tAc "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'"
+$ psql mediaserver -c  "TRUNCATE `psql mediaserver -tAc "SELECT string_agg(tablename, ',') from pg_catalog.pg_tables WHERE tableowner = 'MediaIndex'"` RESTART IDENTITY"
+$ sudo synoservice --start synoindexd"
+```
+Afterwards you can use Synoindex Watcher to repopulate the media-index:
+
+```
+$ synoindexwatcher --rebuild-index
+```
+Make sure to add additional arguments like `--config` or the paths you want to watch.
+
 ----
 
 Copyright 2019 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>

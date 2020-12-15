@@ -115,7 +115,7 @@ def parse_arguments(config):
     sections = [__fix_encoding(s) for s in config.sections()]
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
-        default=sections if len(sections) else constants.DEFAULT_PATHS,
+        default=sections if len(sections) else get_default_paths(),
         help="add a directory that shall be watched")
     parser.add_argument("--blacklist",
         default=__fix_encoding(config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST)),
@@ -139,6 +139,15 @@ def parse_arguments(config):
     parser.add_argument("--generate-init", action="store_true",
         help="generate and show an init-script and exit")
     return parser.parse_args()
+
+def get_default_paths():
+    for path in constants.DEFAULT_PATHS:
+        if not os.path.isdir(path):
+            print("synoindexwatcher: error: implicit path '%s' does not exist\n" % path)
+            print("Please add the paths you want to watch explicitly to the command line. For example:\n")
+            print("python -m synoindexwatcher /volume1/MyMusic /volume1/MyPhotos /volume1/MyVideos\n")
+            sys.exit(2)
+    return constants.DEFAULT_PATHS
 
 def on_sigterm(signal, frame):
     logging.info("Process received SIGTERM signal")

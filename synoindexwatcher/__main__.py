@@ -115,7 +115,7 @@ def parse_arguments(config):
     sections = [__fix_encoding(s) for s in config.sections()]
     parser = argparse.ArgumentParser()
     parser.add_argument('path', nargs='*',
-        default=sections if len(sections) else get_default_paths(),
+        default=sections if len(sections) else None,
         help="add a directory that shall be watched")
     parser.add_argument("--blacklist",
         default=__fix_encoding(config.get("GLOBAL", "blacklist", fallback=constants.DEFAULT_BLACKLIST)),
@@ -138,7 +138,10 @@ def parse_arguments(config):
         help="generate and show a configuration-file and exit")
     parser.add_argument("--generate-init", action="store_true",
         help="generate and show an init-script and exit")
-    return parser.parse_args()
+    args = parser.parse_args()
+    if args.path == None:
+        args.path = get_gefault_paths()
+    return args
 
 def get_default_paths():
     for path in constants.DEFAULT_PATHS:

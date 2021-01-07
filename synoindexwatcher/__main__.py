@@ -139,8 +139,8 @@ def parse_arguments(config):
     parser.add_argument("--generate-init", action="store_true",
         help="generate and show an init-script and exit")
     args = parser.parse_args()
-    if args.path == None:
-        args.path = get_gefault_paths()
+    if args.path == []:
+        args.path = get_default_paths()
     return args
 
 def get_default_paths():

@@ -42,24 +42,24 @@ else:
     def __fix_encoding(s):
         return s
 
-def __add_to_index_recursive(path, name):
-    fullpath = os.path.join(path, name)
-    is_dir = os.path.isdir(fullpath) 
-    if not is_allowed_path(name, -1, is_dir):
-        logging.debug("Skipping path %s" % fullpath)
-        return
-    add_to_index(fullpath, is_dir)
-    if is_dir:
-        for entry in os.listdir(fullpath):
-            __add_to_index_recursive(fullpath, entry)
-
 def call_command(args):
     logging.debug("Calling '%s'" % " ".join(args))
     return subprocess.check_output(args, stderr=subprocess.STDOUT)
 
-def add_to_index_recursive(fullpath):
+def add_to_index_recursive(fullpath, filter):
+    def process(path, name):
+        fullpath = os.path.join(path, name)
+        is_dir = os.path.isdir(fullpath)
+        if not filter(name, path, is_dir):
+            logging.debug("Skipping path %s" % fullpath)
+            return
+        add_to_index(fullpath, is_dir)
+        if is_dir:
+            for entry in os.listdir(fullpath):
+                process(fullpath, entry)
+
     (path, name) = os.path.split(fullpath)
-    __add_to_index_recursive(path, name)
+    process(path, name)
 
 def add_to_index(fullpath, is_dir):
     if is_dir:
@@ -171,17 +171,18 @@ def start():
     logging.basicConfig(filename=args.logfile, level=args.loglevel.upper(),
         format="%(asctime)s %(levelname)s %(message)s")
 
+    filter = build_filter(args)
+
     if args.rebuild_index:
         print("Adding files to media-index (this may take some time)...")
         for path in args.path:
-            add_to_index_recursive(path)
+            add_to_index_recursive(path, filter)
         return
 
     signal.signal(signal.SIGTERM, on_sigterm)
 
     try:
         inotify = INotify()
-        filter = build_filter(args)
         mask = flags.DELETE | flags.CREATE | flags.MOVED_TO | flags.MOVED_FROM | flags.MODIFY | flags.CLOSE_WRITE
         for path in args.path:
             logging.info("Adding watch for path: %s", path)

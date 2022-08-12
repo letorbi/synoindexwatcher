@@ -140,15 +140,21 @@ def parse_arguments(config):
         help="generate and show an init-script and exit")
     args = parser.parse_args()
     if args.path == []:
-        args.path = get_default_paths()
+        args.path = get_default_paths(args.generate_config)
     return args
 
-def get_default_paths():
+def get_default_paths(generate_config):
+    dirty = False
     for path in constants.DEFAULT_PATHS:
         if not os.path.isdir(path):
-            print("synoindexwatcher: error: implicit path '%s' does not exist\n" % path)
-            print("Please add the paths you want to watch explicitly to the command line. For example:\n")
-            print("python -m synoindexwatcher /volume1/MyMusic /volume1/MyPhotos /volume1/MyVideos\n")
+            dirty = True
+            sys.stderr.write("synoindexwatcher: error: implicit path '%s' does not exist\n" % path)
+    if dirty:
+        if generate_config:
+            sys.stderr.write("\nPlease fix the path sections in the generated config file.\n\n")
+        else:
+            sys.stderr.write("\nPlease add the paths you want to watch explicitly to the command line. For example:\n\n")
+            sys.stderr.write("python -m synoindexwatcher /volume1/MyMusic /volume1/MyPhotos /volume1/MyVideos\n\n")
             sys.exit(2)
     return constants.DEFAULT_PATHS
 

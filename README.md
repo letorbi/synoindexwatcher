@@ -14,31 +14,43 @@ The original version was written by Mark Houghton, who [published it in his "cod
 
 ## Installation
 
-Synoindex Watcher cannot be installed via Synology's Package Center. You have to log in via SSH and use the terminal.  I recommend to use pip for the installation. Synology DiskStations do not have pip installed by default, but you can add it easily with the following command:
+Synoindex Watcher cannot be installed via Synology's Package Center. You have to log in via SSH and use the terminal and install the Synoindex Watcher module manually. This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/) and also [configparser](https://pypi.org/project/configparser/), if you use Python <= 3.5.
+
+### Synology DSM 7.x
+
+It is recommended to install the Synindex Watcher module in a Python virtual environment:
+
+```
+$ sudo python -m venv /usr/local/var/venv/synoindexwatcher
+$ sudo /usr/local/var/venv/synoindexwatcher/bin/python -m pip install --upgrade synoindexwatcher
+```
+
+### Synology DSM 6.x
+
+It is recommended to use the Python package manager pip. Synology DSM 6 does not include pip by default, so you have to install it manually before installing the Synoindex Watcher module:
 
 ```
 $ wget https://bootstrap.pypa.io/get-pip.py -qO - | sudo python
-```
-
-Now you can install the Synoindex Watcher module:
-
-```
 $ sudo python -m pip install --upgrade synoindexwatcher
 ```
 
-You can use the same command to upgrade Synoindex Watcher from an older version.
+## Upgrade
 
-This will also install its dependency [inotifyrecursive](https://pypi.org/project/inotifyrecursive/) and also [configparser](https://pypi.org/project/configparser/), if you use Python <= 3.5.
+You can use the following commands to upgrade Synoindex Watcher from an older version:
+
+* **DSM 7.x:** `$ sudo /usr/local/var/venv/synoindexwatcher/bin/python -m pip install --upgrade synoindexwatcher`
+* **DSM 6.x:** `$ sudo python -m pip install --upgrade synoindexwatcher`
 
 ## Usage
 
-You can start Synoindex Watcher with the following command:
+You can start Synoindex Watcher with one of the following commands:
 
-```
-$ python -m synoindexwatcher
-```
+* **DSM 7.x:** `$ sudo /usr/local/var/venv/synoindexwatcher/bin/python -m synoindexwatcher`
+* **DSM 6.x:** `$ sudo python -m synoindexwatcher`
 
 Synoindex Watcher will watch the directories */volume1/music*, */volume1/photo* and */volume1/video* by default.  You can change this, as well as some other things, by adding some [command-line arguments](#command-line-arguments) or using a [configuration-file](#configuration-file). You can also use an init-script to [start Synoindex Watcher on boot](#start-on-boot).
+
+*For the sake of simplicity I will use the DSM 6.x command in the rest of the documentation.*
 
 ### Command-line arguments
 
@@ -69,7 +81,7 @@ The default behaviour of Synoindex Watcher can be changed with various command-l
 The default behaviour of Synoindex Watcher can also be changed via a configuration-file instead of command-line arguments. Use the following command to create a configuration file:
 
 ```
-python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
+$ python -m synoindexwatcher --generate-config | sudo tee /usr/local/etc/synoindexwatcher.conf
 ```
 
 The generated file is split into several sections: The section `[GLOBAL]` may contain default-values for some [command-line arguments](#command-line-arguments), while each of the other sections (e.g. `[/volume1/music]`) represents a directory that shall be watched. The directory-sections contain no values so far.
@@ -77,7 +89,7 @@ The generated file is split into several sections: The section `[GLOBAL]` may co
 You have to explicitly tell Synoindex Watcher to use a configuration-file by calling it like this:
 
 ```
-python -m synoindexwatcher --config=/usr/local/etc/synoindexwatcher.conf
+$ python -m synoindexwatcher --config=/usr/local/etc/synoindexwatcher.conf
 ```
 
 Keep in mind, that you can use additional command-line arguments to override the values from the configuration-file.
@@ -136,4 +148,4 @@ Make sure to add additional arguments like `--config` or the paths you want to w
 
 ----
 
-Copyright (c) 2019-2020 Torben Haase \<[https://pixelsvsbytes.com](https://pixelsvsbytes.com)>
+Copyright (c) 2019-2022 Torben Haase \<[https://letorbi.com](https://letorbi.com)>

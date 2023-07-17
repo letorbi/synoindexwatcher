@@ -125,7 +125,7 @@ This actually does not mean that you run out of disk space, but rather that your
 
 To fix this temporarily you could simply type `echo 204800 > /proc/sys/fs/inotify/max_user_watches` as root. The maximum number of inode-watchers in the user-space would be 204800 afterwards, which should be enough for most use-cases.  Unfortunately this fixes the problem only until the next reboot.
 
-For a permanent solution it is recommended to add the line `fs.inotify.max_user_watches = 204800` to the file */etc/sysctl.conf*. This should set the maximum value during boot, but I had to add an init-script that executes `sysctl -p /etc/sysctl.conf` to make it work. The simplest way would be to add the command to the start-section of the init-script for Synonindex Watcher.
+To set the maximum value during boot, the line `sysctl -w fs.inotify.max_user_watches=204800` has to be added to an init-script. The simplest way would be to add the command to the start-section of the init-script for Synonindex Watcher, but you could also use a dedicated init-script.
 
 ### The media-index contains entries for files that do not exist
 
